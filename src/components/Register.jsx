@@ -1,4 +1,4 @@
-// src/components/Register.jsx - Version avec seulement Admin et Agent
+// src/components/Register.jsx - Version Admin & Agent pour Group Diafouna
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
@@ -15,7 +15,7 @@ import MyMessage from './Message'
 import AxiosInstance from './AxiosInstance'
 import logo from '../assets/logo.svg'
 
-// Configuration des rôles (seulement Admin et Agent)
+// Configuration des rôles (Admin et Agent uniquement)
 const ROLES = [
     { 
         value: 'admin', 
@@ -99,7 +99,7 @@ const Register = () => {
     const { handleSubmit, control, watch, formState: { errors } } = useForm({
         resolver: yupResolver(schema),
         defaultValues: { 
-            role: 'agent',  // Par défaut agent au lieu de caissier
+            role: 'agent',
             first_name: '', 
             last_name: '', 
             username: '',
@@ -140,7 +140,6 @@ const Register = () => {
                 setMessageType('success')
                 setShowMessage(true)
                 
-                // Rediriger vers la page de connexion après 3 secondes
                 setTimeout(() => navigate('/'), 3000)
             })
             .catch((error) => {
@@ -178,7 +177,6 @@ const Register = () => {
             .finally(() => setIsLoading(false))
     }
 
-    // Obtenir l'icône du rôle sélectionné
     const getRoleIcon = (roleValue) => {
         const role = ROLES.find(r => r.value === roleValue)
         const IconComponent = role?.icon || UserCircle
@@ -193,7 +191,6 @@ const Register = () => {
                 <div className="absolute bottom-20 left-20 w-96 h-96 bg-accent/10 rounded-full blur-3xl"></div>
             </div>
             
-            {/* Message de notification */}
             {showMessage && (
                 <div className="fixed top-4 right-4 z-50 animate-slide-in">
                     <MyMessage 
@@ -206,18 +203,18 @@ const Register = () => {
             <div className="w-full max-w-2xl mx-auto relative z-10">
                 <div className="card bg-base-100 shadow-xl border border-primary/20">
                     <div className="card-body p-6">
-                        {/* En-tête avec logo EBSF */}
+                        {/* En-tête avec logo Group Diafouna */}
                         <div className="text-center mb-6">
                             <div className="inline-flex justify-center items-center gap-2 mb-2">
                                 <div className="p-2 rounded-lg bg-primary/10">
                                     <img 
                                         src={logo} 
-                                        alt="Logo EBSF" 
+                                        alt="Group Diafouna" 
                                         className="h-10 w-10 object-contain"
                                     />
                                 </div>
                             </div>
-                            <h1 className="text-2xl font-bold text-base-content">EBSF</h1>
+                            <h1 className="text-2xl font-bold text-base-content">Group Diafouna</h1>
                             <div className="h-0.5 w-12 bg-primary mx-auto my-2"></div>
                             <p className="text-sm text-base-content/60">Création de compte</p>
                         </div>
@@ -370,7 +367,7 @@ const Register = () => {
 
                             <div className="divider text-base-content/40 text-xs">INFORMATIONS PROFESSIONNELLES</div>
 
-                            {/* Rôle - Seulement Admin et Agent */}
+                            {/* Rôle - Admin et Agent */}
                             <div className="form-control w-full mb-4">
                                 <label className="label">
                                     <span className="label-text font-medium flex items-center gap-2 text-base-content">
@@ -485,7 +482,7 @@ const Register = () => {
                         {/* Footer */}
                         <div className="text-center pt-4 mt-4 border-t border-base-200">
                             <p className="text-xs text-base-content/40">
-                                © 2025 EBSF ERP
+                                © {new Date().getFullYear()} Group Diafouna
                             </p>
                         </div>
                     </div>

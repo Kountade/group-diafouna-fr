@@ -162,10 +162,10 @@ const Login = () => {
               <div>
                 <div className="flex flex-col items-center text-center mb-8">
                   <div className="w-24 h-24 bg-primary-content/20 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
-                    <img src={logo} alt="SIMPORE SERVICE" className="w-14 h-14 object-contain" />
+                    <img src={logo} alt="Group Diafouna" className="w-14 h-14 object-contain" />
                   </div>
                   <div>
-                    <h1 className="text-2xl font-bold">SIMPORE SERVICE</h1>
+                    <h1 className="text-2xl font-bold">Group Diafouna</h1>
                     <p className="text-xs opacity-80">Solutions professionnelles intégrées</p>
                   </div>
                 </div>
@@ -223,11 +223,11 @@ const Login = () => {
                 {/* Logo et titre - Version agrandie et centrée */}
                 <div className="text-center space-y-3">
                   <div className="w-20 h-20 mx-auto bg-gradient-to-br from-primary to-primary/80 rounded-2xl flex items-center justify-center shadow-lg">
-                    <img src={logo} alt="SIMPORE SERVICE" className="w-12 h-12 object-contain" />
+                    <img src={logo} alt="Group Diafouna" className="w-12 h-12 object-contain" />
                   </div>
                   
                   <div>
-                    <h2 className="text-2xl font-bold">SIMPORE SERVICE</h2>
+                    <h2 className="text-2xl font-bold">Group Diafouna</h2>
                     <p className="text-xs text-base-content/60 mt-1">Connectez-vous à votre espace</p>
                   </div>
                 </div>
@@ -244,7 +244,7 @@ const Login = () => {
                     </div>
                     <input
                       type="email"
-                      placeholder="contact@simporesenter.com"
+                      placeholder="contact@groupediafouna.com"
                       className={`input input-bordered w-full pl-9 py-2 text-sm ${
                         errors.email ? 'input-error' : ''
                       }`}
@@ -354,7 +354,7 @@ const Login = () => {
 
                 <div className="text-center pt-3">
                   <p className="text-xs text-base-content/40">
-                    © {currentYear} SIMPORE SERVICE
+                    © {currentYear} Group Diafouna
                   </p>
                 </div>
               </form>
