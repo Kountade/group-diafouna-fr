@@ -11,6 +11,15 @@ import PasswordReset from './components/PasswordReset';
 import Partenaires from './components/finance/Partenaires';
 import PartenaireDetail from './components/finance/PartenaireDetail';
 import PartenaireForm from './components/finance/PartenaireForm';
+
+import Depots from './components/finance/Depots';
+import DepotForm from './components/finance/DepotForm';
+import DepotDetail from './components/finance/DepotDetail';
+import DepotPdf from './components/finance/DepotPdf';
+import Comptes from './components/finance/Comptes';
+import CompteDetail from './components/finance/CompteDetail';
+import Transactions from './components/finance/Transactions';
+import TransactionDetail from './components/finance/TransactionDetail';
 // Modules Logistique/Catégories
 
 
@@ -61,17 +70,21 @@ function App() {
 <Route path="/partenaires/:id" element={<PartenaireDetail />} />
 <Route path="/partenaires/:id/modifier" element={<PartenaireForm />} />
 
-                {/* ==================== STOCKS ==================== 
-               
-                <Route path="/stocks/:productId" element={<StockDetails />} />
-              
-                <Route path="/lots/:id" element={<LotDetails />} />
-                <Route path="/mouvements-stock" element={<MovementsList />} />*/}
+                {/* ==================== STOCKS ====================  */}
+
+               <Route path="/depots" element={<Depots />} />
+<Route path="/depots/nouveau" element={<DepotForm />} />
+<Route path="/depots/:id" element={<DepotDetail />} />
+<Route path="/depots/:id/pdf" element={<DepotPdf />} />
+                
+<Route path="/comptes" element={<Comptes />} />
+<Route path="/comptes/:id" element={<CompteDetail />} />
 
 
 
 
-
+<Route path="/transactions" element={<Transactions />} />
+<Route path="/transactions/:id" element={<TransactionDetail />} />
 
                 {/* ==================== AUDIT ====================
                 <Route path="/audit" element={<AuditLog />} />

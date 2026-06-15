@@ -34,7 +34,7 @@ const Partenaires = () => {
   const fetchPartners = async () => {
     setLoading(true);
     try {
-      const response = await AxiosInstance.get('/finance/partners/');
+      const response = await AxiosInstance.get('/partners/');
       setPartners(response.data || []);
     } catch (error) {
       console.error(error);
@@ -51,7 +51,7 @@ const Partenaires = () => {
   const handleDeletePartner = async () => {
     if (!partnerToDelete) return;
     try {
-      await AxiosInstance.delete(`/finance/partners/${partnerToDelete.id}/`);
+      await AxiosInstance.delete(`/partners/${partnerToDelete.id}/`);
       showNotification('Partenaire supprimé avec succès', 'success');
       fetchPartners();
       setShowDeleteModal(false);
@@ -148,7 +148,7 @@ const Partenaires = () => {
                 <th className="py-4 px-3">TÉLÉPHONE</th>
                 <th className="text-right py-4 px-3">SOLDE (€)</th>
                 <th className="text-center py-4 px-3">ACTIONS</th>
-               </tr>
+              </tr>
             </thead>
             <tbody>
               {paginatedPartners.length === 0 ? (
