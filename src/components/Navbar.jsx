@@ -1,76 +1,19 @@
-// src/components/Navbar.jsx - Version Adaptée pour vos rôles (admin, caissier, gestionnaire, magasinier, comptable, livreur)
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
-  LayoutDashboard, 
-  ShoppingBag, 
-  Users, 
-  Package, 
-  Building2, 
-  Tags, 
-  LogOut, 
-  UserCircle, 
-  Settings, 
-  Warehouse, 
-  ShoppingCart,
-  Handshake,
-  Store,
-  Receipt,
-  FileText,
-  ChevronDown,
-  ChevronUp,
-  Menu,
-  X,
-  Bell,
-  Moon,
-  Sun,
-  Shield,
-  Briefcase,
-  Clock,
-  Calendar,
-  MapPin,
-  UserPlus,
-  TrendingUp,
-  CreditCard,
-  UsersRound,
-  Boxes,
-  AlertTriangle,
-  CheckCircle,
-  Search,
-  HelpCircle,
-  History,
-  ClipboardList,
-  Truck,
-  ArrowLeftRight,
-  DollarSign,
-  Grid3x3,
-  Ruler,
-  Award,
-  ClipboardCheck,
-  LineChart,
-  MoveHorizontal,
-  GraduationCap,
-  BarChart3,
-  RefreshCw,
-  Plus,
-  Calculator,
-  PackageCheck,
-  Send,
-  QrCode,
-  Layers
+  LayoutDashboard, Handshake, DollarSign, Users, Settings, UserCircle, LogOut,
+  ChevronDown, ChevronUp, Menu, X, Bell, Moon, Sun, Shield, Clock, Calendar,
+  CreditCard, Send, ArrowLeftRight, Receipt, UserPlus, Search, HelpCircle,
+  AlertTriangle, CheckCircle, TrendingUp, BarChart3, History
 } from 'lucide-react';
 
 import logo from '../assets/logo.svg';
 import AxiosInstance from './AxiosInstance';
 
-// Configuration des rôles (selon votre modèle CustomUser)
+// Configuration des rôles (admin et agent uniquement)
 const ROLE_CONFIG = {
   admin: { label: 'Administrateur', color: 'error', icon: Shield, description: 'Accès total', level: 100 },
-  gestionnaire: { label: 'Gestionnaire', color: 'secondary', icon: UsersRound, description: 'Gestion complète', level: 90 },
-  comptable: { label: 'Comptable', color: 'primary', icon: Calculator, description: 'Gestion financière', level: 80 },
-  magasinier: { label: 'Magasinier', color: 'info', icon: Boxes, description: 'Gestion des stocks', level: 70 },
-  caissier: { label: 'Caissier', color: 'warning', icon: CreditCard, description: 'Point de vente', level: 60 },
-  livreur: { label: 'Livreur', color: 'neutral', icon: Truck, description: 'Livraisons', level: 50 }
+  agent: { label: 'Agent', color: 'primary', icon: Users, description: 'Opérations terrain', level: 60 }
 };
 
 const Navbar = ({ content, mode, toggleColorMode }) => {
@@ -87,27 +30,22 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [openSections, setOpenSections] = useState({
     'TABLEAU DE BORD': true,
-    'VENTES': true,
-    'STOCK': false,
-    'ACHATS': false,
-    'FINANCES': false,
+    'PARTENAIRES & FINANCES': true,
     'ADMINISTRATION': false,
     'MON ESPACE': false
   });
   
   const [userInitial, setUserInitial] = useState('');
   const [userFullName, setUserFullName] = useState('');
-  const [userRole, setUserRole] = useState('caissier');
+  const [userRole, setUserRole] = useState('admin');
   const [userData, setUserData] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [notificationCount, setNotificationCount] = useState(0);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isLoading, setIsLoading] = useState(true);
   
-  // Compteurs pour les badges
-  const [commandesALivrer, setCommandesALivrer] = useState(0);
-  const [stocksFaibles, setStocksFaibles] = useState(0);
-  const [ventesImpayees, setVentesImpayees] = useState(0);
+  // Compteurs (optionnels)
+  const [transfertsRecents, setTransfertsRecents] = useState(0);
   const [alertesCount, setAlertesCount] = useState(0);
 
   // Récupérer l'utilisateur depuis localStorage
@@ -121,7 +59,7 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
   };
 
   const user = getUserData();
-  const role = user?.role || 'caissier';
+  const role = user?.role || 'admin';
   const userEmail = user?.email || '';
   const firstName = user?.first_name || '';
   const lastName = user?.last_name || '';
@@ -136,12 +74,11 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
   const formattedTime = currentTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
   const formattedDate = currentTime.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
 
-  // Charger les données utilisateur et compteurs
+  // Charger les données utilisateur et notifications
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
       try {
-        // Récupérer les détails complets de l'utilisateur
         if (user?.id) {
           const userRes = await AxiosInstance.get(`/users/${user.id}/`);
           setUserData(userRes.data);
@@ -150,42 +87,24 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
           setUserRole(role);
         }
         
-        // Charger les compteurs selon le rôle
-        const isAdmin = role === 'admin' || role === 'gestionnaire';
+        const isAdmin = role === 'admin';
         
-        if (isAdmin || role === 'magasinier') {
-          const [stocksRes, achatsRes] = await Promise.all([
-            AxiosInstance.get('/stocks/low-stock/').catch(() => ({ data: [] })),
-            AxiosInstance.get('/purchase-orders/?status=pending').catch(() => ({ data: [] }))
-          ]);
-          setStocksFaibles(stocksRes.data?.length || 0);
-          setCommandesALivrer(achatsRes.data?.length || 0);
-        }
-        
-        if (isAdmin || role === 'comptable' || role === 'caissier') {
-          const ventesRes = await AxiosInstance.get('/sales/?payment_status=pending').catch(() => ({ data: [] }));
-          setVentesImpayees(ventesRes.data?.length || 0);
-        }
-        
+        // Charger des compteurs pour les notifications (ex: demandes en attente)
         if (isAdmin) {
-          const alertsRes = await AxiosInstance.get('/alerts/').catch(() => ({ data: [] }));
+          const alertsRes = await AxiosInstance.get('/finance/alerts/').catch(() => ({ data: [] }));
           setAlertesCount(alertsRes.data?.length || 0);
           
-          // Construire les notifications
+          // Construire les notifications (exemples)
           const notifs = [];
-          if (stocksFaibles > 0) {
-            notifs.push({ id: 'stock', title: 'Stock faible', message: `${stocksFaibles} produit(s) en rupture`, link: '/stocks', type: 'warning' });
+          if (transfertsRecents > 0) {
+            notifs.push({ id: 'transferts', title: 'Transferts récents', message: `${transfertsRecents} nouveau(x) transfert(s)`, link: '/transactions', type: 'info' });
           }
-          if (ventesImpayees > 0) {
-            notifs.push({ id: 'ventes', title: 'Paiements en attente', message: `${ventesImpayees} vente(s) impayée(s)`, link: '/ventes', type: 'error' });
-          }
-          if (commandesALivrer > 0) {
-            notifs.push({ id: 'achats', title: 'Commandes à recevoir', message: `${commandesALivrer} commande(s) en attente`, link: '/commandes', type: 'info' });
+          if (alertesCount > 0) {
+            notifs.push({ id: 'alerts', title: 'Alertes financières', message: `${alertesCount} alerte(s)`, link: '/comptes', type: 'warning' });
           }
           setNotifications(notifs);
           setNotificationCount(notifs.length);
         }
-        
       } catch (error) {
         console.error('Erreur chargement:', error);
       } finally {
@@ -194,7 +113,7 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
     };
     
     loadData();
-  }, [role, stocksFaibles, ventesImpayees, commandesALivrer]);
+  }, [role, transfertsRecents, alertesCount]);
 
   // Initiale utilisateur
   useEffect(() => {
@@ -207,28 +126,23 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
     }
   }, [firstName, lastName, userName]);
 
-  const roleConfig = ROLE_CONFIG[role] || ROLE_CONFIG.caissier;
+  const roleConfig = ROLE_CONFIG[role] || ROLE_CONFIG.agent;
   const RoleIcon = roleConfig.icon;
   
-  // Permissions basées sur les rôles
+  // Permissions simplifiées
   const isAdmin = role === 'admin';
-  const isGestionnaire = role === 'gestionnaire';
-  const isComptable = role === 'comptable';
-  const isMagasinier = role === 'magasinier';
-  const isCaissier = role === 'caissier';
-  const isLivreur = role === 'livreur';
+  const isAgent = role === 'agent';
   
-  const hasAdminAccess = isAdmin || isGestionnaire || isComptable;
-  
-  // Méthodes de permission
+  // Méthodes de permission pour le module financier
   const canViewDashboard = () => true;
-  const canViewSales = () => isAdmin || isGestionnaire || isCaissier || isComptable;
-  const canViewPOS = () => isAdmin || isCaissier;
-  const canViewStock = () => isAdmin || isGestionnaire || isMagasinier;
-  const canViewPurchases = () => isAdmin || isGestionnaire;
-  const canViewFinances = () => isAdmin || isGestionnaire || isComptable;
-  const canViewUsers = () => isAdmin;
-  const canViewDeliveries = () => isAdmin || isGestionnaire || isLivreur;
+  const canManagePartners = () => isAdmin;
+  const canViewPartners = () => isAdmin || isAgent;
+  const canRecordDeposit = () => isAdmin || isAgent;
+  const canTransferToAgent = () => isAdmin;
+  const canRecordWithdrawal = () => isAgent;
+  const canViewAccounts = () => isAdmin || isAgent;
+  const canViewTransactions = () => isAdmin || isAgent;
+  const canViewAdmin = () => isAdmin;
 
   const handleSectionToggle = (section) => {
     setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
@@ -241,95 +155,38 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
     navigate('/');
   };
 
-  // Menu sections adaptées aux rôles
+  // Menu sections (uniquement finance, admin, espace)
   const menuSections = [
     {
       name: 'TABLEAU DE BORD',
       icon: LayoutDashboard,
       items: [
         { id: 'dashboard', text: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', permission: canViewDashboard() },
-        { id: 'statistiques', text: 'Statistiques', icon: TrendingUp, path: '/statistiques', permission: isAdmin || isGestionnaire },
-        { id: 'analyses', text: 'Analyses', icon: BarChart3, path: '/analyses', permission: isAdmin || isGestionnaire }
+        { id: 'statistiques', text: 'Statistiques financières', icon: TrendingUp, path: '/statistiques', permission: isAdmin },
+        { id: 'analyses', text: 'Analyses', icon: BarChart3, path: '/analyses', permission: isAdmin }
       ]
     },
     {
-      name: 'VENTES',
-      icon: ShoppingCart,
-      permission: canViewSales(),
+      name: 'PARTENAIRES & FINANCES',
+      icon: Handshake,
+      permission: true,
       items: [
-        { id: 'pos', text: 'Point de Vente', icon: ShoppingBag, path: '/point-de-vente', permission: canViewPOS() },
-        { id: 'ventes', text: 'Ventes', icon: ShoppingCart, path: '/ventes', permission: canViewSales(), badge: ventesImpayees > 0 ? ventesImpayees : 0 },
-        { id: 'clients', text: 'Clients', icon: Users, path: '/clients', permission: canViewSales() },
-        { id: 'factures', text: 'Factures', icon: Receipt, path: '/factures', permission: canViewSales() },
-        { id: 'paiements', text: 'Paiements', icon: CreditCard, path: '/paiements', permission: canViewFinances() }
+        { id: 'partners', text: 'Partenaires', icon: Users, path: '/partenaires', permission: canViewPartners() },
+        { id: 'partners-create', text: 'Nouveau partenaire', icon: UserPlus, path: '/partenaires/ajouter', permission: canManagePartners() },
+        { id: 'deposit', text: 'Dépôt partenaire', icon: CreditCard, path: '/depots', permission: canRecordDeposit() },
+        { id: 'transfer-to-agent', text: 'Transfert → agent', icon: Send, path: '/transferts-vers-agents', permission: canTransferToAgent() },
+        { id: 'withdrawal', text: 'Retrait partenaire', icon: ArrowLeftRight, path: '/retraits', permission: canRecordWithdrawal() },
+        { id: 'accounts', text: 'Comptes', icon: DollarSign, path: '/comptes', permission: canViewAccounts() },
+        { id: 'transactions', text: 'Transactions', icon: Receipt, path: '/transactions', permission: canViewTransactions() }
       ]
     },
-{
-  name: 'STOCK',
-  icon: Package,
-  permission: canViewStock(),
-  items: [
-    // Gestion des catégories et produits
-    { id: 'categories', text: 'Catégories', icon: Tags, path: '/categories', permission: canViewStock() },
-    { id: 'produits', text: 'Produits', icon: Package, path: '/produits', permission: canViewStock() },
-    
-    // Gestion des unités de mesure
-    { id: 'unites-mesure', text: 'Unités de mesure', icon: Ruler, path: '/unites-mesure', permission: isAdmin || isGestionnaire },
-    
-    // Gestion des stocks
-    { id: 'stocks', text: 'Stocks', icon: Boxes, path: '/stocks', permission: canViewStock(), badge: stocksFaibles },
-    { id: 'entrepots', text: 'Entrepôts', icon: Warehouse, path: '/entrepots', permission: isAdmin || isGestionnaire },
-    { id: 'mouvements', text: 'Mouvements', icon: TrendingUp, path: '/mouvements-stock', permission: canViewStock() },
-    
-    // Gestion des lots et expiration
-    { id: 'lots', text: 'Lots', icon: Layers, path: '/lots', permission: canViewStock() },
-    { id: 'alertes-expiration', text: 'Alertes expiration', icon: AlertTriangle, path: '/alertes-expiration', permission: canViewStock(), badge: alertesCount },
-    
-    // Inventaire et transferts
-    { id: 'inventaire', text: 'Inventaire', icon: ClipboardCheck, path: '/inventaire', permission: isAdmin || isGestionnaire },
-    { id: 'transferts', text: 'Transferts', icon: MoveHorizontal, path: '/transferts', permission: isAdmin || isGestionnaire }
-  ]
-},
-    {
-      name: 'ACHATS',
-      icon: ShoppingBag,
-      permission: canViewPurchases(),
-      items: [
-        { id: 'fournisseurs', text: 'Fournisseurs', icon: Building2, path: '/fournisseurs', permission: canViewPurchases() },
-        { id: 'commandes', text: 'Commandes', icon: FileText, path: '/commandes-fournisseurs', permission: canViewPurchases(), badge: commandesALivrer },
-        { id: 'receptions', text: 'Réceptions', icon: PackageCheck, path: '/receptions', permission: canViewPurchases() },
-        { id: 'alertes', text: 'Alertes', icon: AlertTriangle, path: '/purchase-alerts', permission: isAdmin, badge: alertesCount }
-      ]
-    },
-    {
-      name: 'FINANCES',
-      icon: DollarSign,
-      permission: canViewFinances(),
-      items: [
-        { id: 'tresorerie', text: 'Trésorerie', icon: CreditCard, path: '/tresorerie', permission: canViewFinances() },
-        { id: 'depenses', text: 'Dépenses', icon: FileText, path: '/depenses', permission: canViewFinances() },
-        { id: 'rapports', text: 'Rapports', icon: LineChart, path: '/rapports-financiers', permission: canViewFinances() },
-        { id: 'comptabilite', text: 'Comptabilité', icon: Calculator, path: '/comptabilite', permission: isComptable || isAdmin }
-      ]
-    },
-    {
-      name: 'LIVRAISONS',
-      icon: Truck,
-      permission: canViewDeliveries(),
-      items: [
-        { id: 'livraisons', text: 'Livraisons', icon: Truck, path: '/livraisons', permission: canViewDeliveries() },
-        { id: 'tournees', text: 'Tournées', icon: MapPin, path: '/tournees', permission: isAdmin || isGestionnaire },
-        { id: 'livreurs', text: 'Livreurs', icon: Users, path: '/livreurs', permission: isAdmin || isGestionnaire },
-        { id: 'suivi', text: 'Suivi', icon: MapPin, path: '/suivi-livraisons', permission: canViewDeliveries() }
-      ]
-    },
-    ...(canViewUsers() ? [{
+    ...(canViewAdmin() ? [{
       name: 'ADMINISTRATION',
       icon: Settings,
       items: [
         { id: 'utilisateurs', text: 'Utilisateurs', icon: Users, path: '/utilisateurs', permission: isAdmin },
         { id: 'roles', text: 'Rôles & Permissions', icon: Shield, path: '/roles', permission: isAdmin },
-        { id: 'audit', text: 'Journal d\'audit', icon: History, path: '/audit', permission: isAdmin },
+        { id: 'audit', text: "Journal d'audit", icon: History, path: '/audit', permission: isAdmin },
         { id: 'parametres', text: 'Paramètres', icon: Settings, path: '/parametres', permission: isAdmin }
       ]
     }] : []),
@@ -351,7 +208,7 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
     return visibleItems.length > 0;
   });
 
-  // Raccourci clavier recherche
+  // Raccourci clavier recherche (Ctrl+K)
   useEffect(() => {
     const handleKeyDown = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
@@ -435,8 +292,6 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
       <nav className="fixed top-0 left-0 right-0 z-40 bg-gradient-to-r from-primary to-primary/90 shadow-lg border-b-2 border-accent">
         <div className="px-4 sm:px-6 lg:pl-72">
           <div className="flex items-center justify-between h-16">
-            
-            {/* Logo et menu toggle */}
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -453,7 +308,6 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
                 {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
               </button>
 
-              {/* Logo */}
               <Link to="/dashboard" className="hidden lg:flex items-center gap-3 group">
                 <div className="relative">
                   <div className="absolute inset-0 bg-primary-content/20 rounded-xl blur-md group-hover:blur-lg transition-all"></div>
@@ -462,12 +316,11 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
                   </div>
                 </div>
                 <div>
-                  <h1 className="text-primary-content font-bold text-lg tracking-wide"> EBSF</h1>
-                  <p className="text-primary-content/60 text-[10px] font-medium">ERP Management</p>
+                  <h1 className="text-primary-content font-bold text-lg tracking-wide">EBSF</h1>
+                  <p className="text-primary-content/60 text-[10px] font-medium">Finance & Partenaires</p>
                 </div>
               </Link>
 
-              {/* Logo mobile */}
               <div className="lg:hidden flex items-center gap-2">
                 <div className="w-8 h-8 bg-base-100 rounded-lg flex items-center justify-center border-2 border-accent">
                   <img src={logo} alt="Logo" className="w-6 h-6 object-contain" />
@@ -476,7 +329,6 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
               </div>
             </div>
 
-            {/* Centre - Date/Heure */}
             <div className="hidden lg:flex items-center gap-3">
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary-content/10 backdrop-blur-sm">
                 <Calendar className="w-4 h-4 text-primary-content/80" />
@@ -487,10 +339,7 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
               </div>
             </div>
 
-            {/* Actions droite */}
             <div className="flex items-center gap-2">
-              
-              {/* Recherche */}
               <button
                 onClick={() => setIsSearchOpen(true)}
                 className="p-2 rounded-lg text-primary-content hover:bg-primary-content/10 transition-colors"
@@ -499,14 +348,12 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
                 <Search className="w-5 h-5" />
               </button>
 
-              {/* Badge rôle */}
               <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary-content/10">
                 <RoleIcon className="w-4 h-4 text-primary-content" />
                 <span className="text-primary-content text-xs font-medium">{roleConfig.label}</span>
               </div>
 
-              {/* Notifications */}
-              {hasAdminAccess && (
+              {isAdmin && (
                 <div className="relative">
                   <button
                     onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
@@ -548,7 +395,7 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
                               }`}>
                                 {notif.type === 'warning' ? <AlertTriangle className="w-4 h-4 text-warning" /> : 
                                  notif.type === 'error' ? <AlertTriangle className="w-4 h-4 text-error" /> :
-                                 <ShoppingBag className="w-4 h-4 text-info" />}
+                                 <Handshake className="w-4 h-4 text-info" />}
                               </div>
                               <div className="flex-1">
                                 <p className="text-sm font-medium text-base-content">{notif.title}</p>
@@ -570,7 +417,6 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
                 </div>
               )}
 
-              {/* Mode thème */}
               <button
                 onClick={toggleColorMode}
                 className="p-2 rounded-lg text-primary-content hover:bg-primary-content/10 transition-colors"
@@ -579,7 +425,6 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
                 {mode === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
 
-              {/* Menu utilisateur */}
               <div className="relative">
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
@@ -656,8 +501,6 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
         hidden lg:block
       `}>
         <div className="h-full flex flex-col">
-          
-          {/* Logo dans la sidebar */}
           <div className={`p-4 border-b border-primary/20 ${!sidebarOpen && 'text-center'} bg-gradient-to-r from-primary/5 to-transparent`}>
             <div className={`flex items-center ${!sidebarOpen && 'justify-center'} gap-3`}>
               <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary/80 rounded-xl flex items-center justify-center shadow-lg">
@@ -666,14 +509,13 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
               {sidebarOpen && (
                 <div>
                   <h2 className="font-bold text-base-content text-sm">EBSF</h2>
-                  <p className="text-xs text-base-content/50">ERP Management</p>
+                  <p className="text-xs text-base-content/50">Finance & Partenaires</p>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Profil utilisateur */}
-          <div className={`p-4 border-b border-primary/20 ${!sidebarOpen && 'text-center'} ${roleConfig.color === 'error' ? 'bg-error/5' : roleConfig.color === 'primary' ? 'bg-primary/5' : 'bg-base-200'}`}>
+          <div className={`p-4 border-b border-primary/20 ${!sidebarOpen && 'text-center'} ${roleConfig.color === 'error' ? 'bg-error/5' : 'bg-primary/5'}`}>
             <div className={`flex items-center ${!sidebarOpen && 'flex-col'} gap-3`}>
               <div className="avatar placeholder">
                 <div className={`bg-gradient-to-br from-primary to-primary/80 text-primary-content rounded-xl ${sidebarOpen ? 'w-12 h-12' : 'w-10 h-10'} shadow-lg ring-2 ring-primary/20`}>
@@ -693,7 +535,6 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
             </div>
           </div>
 
-          {/* Menu de navigation */}
           <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
             {visibleSections.map((section, idx) => {
               const visibleItems = section.items.filter(item => item.permission);
@@ -759,7 +600,6 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
             })}
           </nav>
 
-          {/* Footer Sidebar */}
           <div className="p-4 border-t border-primary/20 bg-base-100">
             {sidebarOpen ? (
               <div className="flex items-center justify-between">
@@ -767,7 +607,7 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
                   <div className="w-1.5 h-1.5 bg-success rounded-full animate-pulse"></div>
                   <span className="text-xs text-base-content/50">v1.0.0</span>
                 </div>
-                <span className="badge badge-primary badge-sm">ERP 2026</span>
+                <span className="badge badge-primary badge-sm">Gestion financière</span>
               </div>
             ) : (
               <div className="text-center">
@@ -791,7 +631,7 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
         </div>
       </main>
 
-      {/* Menu mobile */}
+      {/* Menu mobile (version simplifiée) */}
       {isMobileMenuOpen && (
         <>
           <div className="fixed inset-0 bg-black/50 z-50 lg:hidden" onClick={() => setIsMobileMenuOpen(false)}></div>
@@ -804,7 +644,7 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
                   </div>
                   <div>
                     <h2 className="text-primary-content font-bold text-lg">EBSF</h2>
-                    <p className="text-primary-content/70 text-xs">{roleConfig.label}</p>
+                    <p className="text-primary-content/70 text-xs">Finance</p>
                   </div>
                 </div>
                 <button onClick={() => setIsMobileMenuOpen(false)} className="text-primary-content p-2 rounded-lg hover:bg-primary-content/10">
