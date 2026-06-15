@@ -8,30 +8,12 @@ import { Routes, Route, useLocation } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoutes';
 import PasswordResetRequest from './components/PasswordResetRequest';
 import PasswordReset from './components/PasswordReset';
-
+import Partenaires from './components/finance/Partenaires';
+import PartenaireDetail from './components/finance/PartenaireDetail';
+import PartenaireForm from './components/finance/PartenaireForm';
 // Modules Logistique/Catégories
-import Categories from './components/logistique/Categories';
-import CategoryForm from './components/logistique/CategoryForm';
-import CategoryDetails from './components/logistique/CategoryDetails';
 
-// Modules Produits
-import ProductsList from './components/logistique/ProductsList';
-import ProductForm from './components/logistique/ProductForm';
-import ProductDetails from './components/logistique/ProductDetails';
-import UnitesMesure from './components/logistique/UnitesMesure';
-import UniteMesureForm from './components/logistique/UniteMesureForm';
 
-// Modules Stocks
-import StocksList from './components/logistique/StocksList';
-import LotsList from './components/logistique/LotsList';
-import EntrepotForm from './components/logistique/EntrepotForm';
-import Entrepots from './components/logistique/Entrepots';
-import EntrepotDetails from './components/logistique/EntrepotDetails';
-import MouvementsStock from './components/logistique/MouvementsStock';
-import Transferts from './components/logistique/Transferts';
-import TransfertForm from './components/logistique/TransfertForm';
-import TransfertDetails from './components/logistique/TransfertDetails';
-// Modules Entrepôts
 
 
 // Modules Clients
@@ -73,24 +55,12 @@ function App() {
                 <Route path="/home" element={<Home />} />
                 <Route path="/dashboard" element={<Home />} />
 
-                {/* ==================== CATÉGORIES ==================== */}
-                <Route path="/categories" element={<Categories />} />
-                <Route path="/categories/nouveau" element={<CategoryForm />} />
-                <Route path="/categories/:id/modifier" element={<CategoryForm />} />
-                <Route path="/categories/:id" element={<CategoryDetails />} />
+                {/* ==================== Partenaire ==================== */}
+              <Route path="/partenaires" element={<Partenaires />} />
+<Route path="/partenaires/ajouter" element={<PartenaireForm />} />
+<Route path="/partenaires/:id" element={<PartenaireDetail />} />
+<Route path="/partenaires/:id/modifier" element={<PartenaireForm />} />
 
-                {/* ==================== PRODUITS ==================== */}
-                <Route path="/produits" element={<ProductsList />} />
-                <Route path="/produits/nouveau" element={<ProductForm />} />
-                <Route path="/produits/:id/modifier" element={<ProductForm />} />
-                <Route path="/produits/:id" element={<ProductDetails />} />
-
- <Route path="/stocks" element={<StocksList />} />
-   <Route path="/lots" element={<LotsList />} />
-
-   <Route path="/unites-mesure" element={<UnitesMesure />} />
-<Route path="/unites-mesure/nouveau" element={<UniteMesureForm />} />
-<Route path="/unites-mesure/:id/modifier" element={<UniteMesureForm />} />
                 {/* ==================== STOCKS ==================== 
                
                 <Route path="/stocks/:productId" element={<StockDetails />} />
@@ -98,48 +68,11 @@ function App() {
                 <Route path="/lots/:id" element={<LotDetails />} />
                 <Route path="/mouvements-stock" element={<MovementsList />} />*/}
 
-<Route path="/mouvements-stock" element={<MouvementsStock />} />
-              <Route path="/entrepots" element={<Entrepots />} />
-<Route path="/entrepots/nouveau" element={<EntrepotForm />} />
-<Route path="/entrepots/:id/modifier" element={<EntrepotForm />} />
-<Route path="/entrepots/:id" element={<EntrepotDetails />} />
 
 
-<Route path="/transferts" element={<Transferts />} />
-<Route path="/transferts/nouveau" element={<TransfertForm />} />
-<Route path="/transferts/:id" element={<TransfertDetails />} />
 
-                {/* ==================== ALERTES EXPIRATION ==================== 
-                <Route path="/alertes-expiration" element={<ExpiryAlertsList />} />*/}
 
-                {/* ==================== VENTES ==================== 
-                <Route path="/ventes" element={<SalesList />} />
-                <Route path="/ventes/nouveau" element={<SaleForm />} />
-                <Route path="/ventes/:id" element={<SaleDetails />} />
-                <Route path="/point-de-vente" element={<PointOfSale />} />*/}
 
-                {/* ==================== CLIENTS ==================== 
-                <Route path="/clients" element={<ClientsList />} />
-                <Route path="/clients/nouveau" element={<ClientForm />} />
-                <Route path="/clients/:id/modifier" element={<ClientForm />} />
-                <Route path="/clients/:id" element={<ClientDetails />} />*/}
-
-                {/* ==================== FOURNISSEURS & ACHATS ==================== 
-                <Route path="/fournisseurs" element={<SuppliersList />} />
-                <Route path="/fournisseurs/nouveau" element={<SupplierForm />} />
-                <Route path="/fournisseurs/:id/modifier" element={<SupplierForm />} />
-                <Route path="/fournisseurs/:id" element={<SupplierDetails />} />
-                <Route path="/commandes-fournisseurs" element={<PurchaseOrdersList />} />
-                <Route path="/commandes-fournisseurs/nouveau" element={<PurchaseOrderForm />} />*/}
-
-                {/* ==================== FINANCES ==================== 
-                <Route path="/depenses" element={<ExpensesList />} />
-                <Route path="/tresorerie" element={<CashFlowList />} />*/}
-
-                {/* ==================== LIVRAISONS ==================== 
-                <Route path="/livraisons" element={<DeliveriesList />} />
-                <Route path="/livraisons/:id" element={<DeliveryDetails />} />
-*/}
                 {/* ==================== AUDIT ====================
                 <Route path="/audit" element={<AuditLog />} />
  */}
