@@ -4,7 +4,8 @@ import {
   LayoutDashboard, Handshake, DollarSign, Users, Settings, UserCircle, LogOut,
   ChevronDown, ChevronUp, Menu, X, Bell, Moon, Sun, Shield, Clock, Calendar,
   CreditCard, Send, ArrowLeftRight, Receipt, UserPlus, Search, HelpCircle,
-  AlertTriangle, CheckCircle, TrendingUp, BarChart3, History
+  AlertTriangle, CheckCircle, TrendingUp, BarChart3, History, Wallet,
+  UserCheck, Eye, ListChecks
 } from 'lucide-react';
 
 import logo from '../assets/logo.svg';
@@ -31,6 +32,7 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
   const [openSections, setOpenSections] = useState({
     'TABLEAU DE BORD': true,
     'PARTENAIRES & FINANCES': true,
+    'AGENTS': false,
     'ADMINISTRATION': false,
     'MON ESPACE': false
   });
@@ -43,10 +45,12 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
   const [notificationCount, setNotificationCount] = useState(0);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isLoading, setIsLoading] = useState(true);
+  const [agentBalance, setAgentBalance] = useState(null);
   
   // Compteurs (optionnels)
   const [transfertsRecents, setTransfertsRecents] = useState(0);
   const [alertesCount, setAlertesCount] = useState(0);
+  const [agentsCount, setAgentsCount] = useState(0);
 
   // Récupérer l'utilisateur depuis localStorage
   const getUserData = () => {
@@ -88,19 +92,46 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
         }
         
         const isAdmin = role === 'admin';
+        const isAgent = role === 'agent';
         
-        // Charger des compteurs pour les notifications (ex: demandes en attente)
+        // Charger le solde de l'agent si c'est un agent
+        if (isAgent) {
+          try {
+            const balanceRes = await AxiosInstance.get('/agents-balance/me/');
+            setAgentBalance(balanceRes.data);
+          } catch (err) {
+            console.error('Erreur chargement solde agent:', err);
+          }
+        }
+        
+        // Charger des compteurs pour les notifications
         if (isAdmin) {
-          const alertsRes = await AxiosInstance.get('/finance/alerts/').catch(() => ({ data: [] }));
-          setAlertesCount(alertsRes.data?.length || 0);
+          try {
+            const agentsRes = await AxiosInstance.get('/agents-balance/');
+            setAgentsCount(agentsRes.data?.length || 0);
+          } catch (err) {
+            console.error('Erreur chargement agents:', err);
+          }
           
           // Construire les notifications (exemples)
           const notifs = [];
-          if (transfertsRecents > 0) {
-            notifs.push({ id: 'transferts', title: 'Transferts récents', message: `${transfertsRecents} nouveau(x) transfert(s)`, link: '/transactions', type: 'info' });
+          if (agentsCount > 0) {
+            notifs.push({ 
+              id: 'agents', 
+              title: 'Agents actifs', 
+              message: `${agentsCount} agent(s) enregistré(s)`, 
+              link: '/agents', 
+              type: 'info' 
+            });
           }
           if (alertesCount > 0) {
-            notifs.push({ id: 'alerts', title: 'Alertes financières', message: `${alertesCount} alerte(s)`, link: '/comptes', type: 'warning' });
+            notifs.push({ 
+              id: 'alerts', 
+              title: 'Alertes financières', 
+              message: `${alertesCount} alerte(s)`, 
+              link: '/comptes', 
+              type: 'warning' 
+            });
           }
           setNotifications(notifs);
           setNotificationCount(notifs.length);
@@ -113,7 +144,7 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
     };
     
     loadData();
-  }, [role, transfertsRecents, alertesCount]);
+  }, [role, transfertsRecents, alertesCount, agentsCount]);
 
   // Initiale utilisateur
   useEffect(() => {
@@ -143,6 +174,8 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
   const canViewAccounts = () => isAdmin || isAgent;
   const canViewTransactions = () => isAdmin || isAgent;
   const canViewAdmin = () => isAdmin;
+  const canViewAgents = () => isAdmin;
+  const canViewMyBalance = () => isAgent;
 
   const handleSectionToggle = (section) => {
     setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
@@ -155,7 +188,7 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
     navigate('/');
   };
 
-  // Menu sections (uniquement finance, admin, espace)
+  // Menu sections (finance, agents, admin, espace)
   const menuSections = [
     {
       name: 'TABLEAU DE BORD',
@@ -178,6 +211,24 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
         { id: 'withdrawal', text: 'Retrait partenaire', icon: ArrowLeftRight, path: '/retraits', permission: canRecordWithdrawal() },
         { id: 'accounts', text: 'Comptes', icon: DollarSign, path: '/comptes', permission: canViewAccounts() },
         { id: 'transactions', text: 'Transactions', icon: Receipt, path: '/transactions', permission: canViewTransactions() }
+      ]
+    },
+    {
+      name: 'AGENTS',
+      icon: Users,
+      permission: isAdmin || isAgent,
+      items: [
+        // Admin
+        ...(isAdmin ? [
+          { id: 'agents-list', text: 'Liste des agents', icon: ListChecks, path: '/agents', permission: isAdmin },
+          { id: 'agents-balance', text: 'Soldes des agents', icon: Wallet, path: '/agents', permission: isAdmin },
+          { id: 'agents-transfer', text: 'Transférer à un agent', icon: Send, path: '/agents/transfer', permission: isAdmin }
+        ] : []),
+        // Agent
+        ...(isAgent ? [
+          { id: 'my-balance', text: 'Mon solde', icon: Wallet, path: '/agents/me', permission: isAgent },
+          { id: 'my-transactions', text: 'Mes transactions', icon: Receipt, path: '/transactions', permission: isAgent }
+        ] : [])
       ]
     },
     ...(canViewAdmin() ? [{
@@ -337,6 +388,16 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
                 <Clock className="w-4 h-4 text-primary-content/80" />
                 <span className="text-sm font-medium text-primary-content">{formattedTime}</span>
               </div>
+              
+              {/* Solde de l'agent dans la barre */}
+              {isAgent && agentBalance && (
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-success/20 backdrop-blur-sm border border-success/30">
+                  <Wallet className="w-4 h-4 text-success" />
+                  <span className="text-sm font-bold text-success">
+                    {new Intl.NumberFormat('fr-FR').format(agentBalance.balance)} {agentBalance.currency || 'XOF'}
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center gap-2">
@@ -395,7 +456,7 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
                               }`}>
                                 {notif.type === 'warning' ? <AlertTriangle className="w-4 h-4 text-warning" /> : 
                                  notif.type === 'error' ? <AlertTriangle className="w-4 h-4 text-error" /> :
-                                 <Handshake className="w-4 h-4 text-info" />}
+                                 <Users className="w-4 h-4 text-info" />}
                               </div>
                               <div className="flex-1">
                                 <p className="text-sm font-medium text-base-content">{notif.title}</p>
@@ -452,12 +513,27 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
                               <span className={`badge badge-${roleConfig.color} badge-sm`}>
                                 {roleConfig.label}
                               </span>
+                              {isAgent && agentBalance && (
+                                <span className="badge badge-success badge-sm">
+                                  {new Intl.NumberFormat('fr-FR').format(agentBalance.balance)} {agentBalance.currency || 'XOF'}
+                                </span>
+                              )}
                             </div>
                           </div>
                         </div>
                       </div>
                       
                       <div className="py-2">
+                        {isAgent && (
+                          <Link
+                            to="/agents/me"
+                            onClick={() => setIsUserMenuOpen(false)}
+                            className="flex items-center gap-3 px-4 py-2.5 hover:bg-primary/5 transition-colors"
+                          >
+                            <Wallet className="w-5 h-5 text-base-content/40" />
+                            <span className="text-sm text-base-content">Mon solde</span>
+                          </Link>
+                        )}
                         <Link
                           to="/profile"
                           onClick={() => setIsUserMenuOpen(false)}
@@ -526,9 +602,16 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-sm truncate text-base-content">{userFullName || userName}</p>
                   <p className="text-xs text-base-content/50 truncate">{userEmail}</p>
-                  <div className={`badge badge-${roleConfig.color} badge-sm mt-1`}>
-                    <RoleIcon className="w-3 h-3 mr-1" />
-                    {roleConfig.label}
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    <span className={`badge badge-${roleConfig.color} badge-sm`}>
+                      <RoleIcon className="w-3 h-3 mr-1" />
+                      {roleConfig.label}
+                    </span>
+                    {isAgent && agentBalance && (
+                      <span className="badge badge-success badge-sm">
+                        {new Intl.NumberFormat('fr-FR').format(agentBalance.balance)} {agentBalance.currency || 'XOF'}
+                      </span>
+                    )}
                   </div>
                 </div>
               )}
@@ -651,6 +734,14 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
                   <X className="w-5 h-5" />
                 </button>
               </div>
+              {isAgent && agentBalance && (
+                <div className="bg-primary-content/10 rounded-lg p-3 flex items-center justify-between">
+                  <span className="text-primary-content/80 text-sm">Mon solde</span>
+                  <span className="text-primary-content font-bold">
+                    {new Intl.NumberFormat('fr-FR').format(agentBalance.balance)} {agentBalance.currency || 'XOF'}
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="py-4 px-3 space-y-1">

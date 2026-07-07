@@ -20,6 +20,11 @@ import Comptes from './components/finance/Comptes';
 import CompteDetail from './components/finance/CompteDetail';
 import Transactions from './components/finance/Transactions';
 import TransactionDetail from './components/finance/TransactionDetail';
+
+import AgentBalanceList from './components/finance/AgentBalanceList';
+import AgentBalanceDetail from './components/finance/AgentBalanceDetail';
+import AgentBalanceMe from './components/finance/AgentBalanceMe';
+import AgentTransfer from './components/finance/AgentTransfer';
 // Modules Logistique/Catégories
 
 
@@ -86,6 +91,11 @@ function App() {
 <Route path="/transactions" element={<Transactions />} />
 <Route path="/transactions/:id" element={<TransactionDetail />} />
 
+
+ <Route path="/agents" element={<AgentBalanceList />} />
+  <Route path="/agents/:id/balance" element={<AgentBalanceDetail />} />
+  <Route path="/agents/me" element={<AgentBalanceMe />} />
+  <Route path="/agents/transfer" element={<AgentTransfer />} />
                 {/* ==================== AUDIT ====================
                 <Route path="/audit" element={<AuditLog />} />
  */}
