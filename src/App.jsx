@@ -11,7 +11,6 @@ import PasswordReset from './components/PasswordReset';
 import Partenaires from './components/finance/Partenaires';
 import PartenaireDetail from './components/finance/PartenaireDetail';
 import PartenaireForm from './components/finance/PartenaireForm';
-
 import Depots from './components/finance/Depots';
 import DepotForm from './components/finance/DepotForm';
 import DepotDetail from './components/finance/DepotDetail';
@@ -25,6 +24,9 @@ import AgentBalanceList from './components/finance/AgentBalanceList';
 import AgentBalanceDetail from './components/finance/AgentBalanceDetail';
 import AgentBalanceMe from './components/finance/AgentBalanceMe';
 import AgentTransfer from './components/finance/AgentTransfer';
+import Utilisateurs from './components/users/Utilisateurs';
+import UtilisateurForm from './components/users/UtilisateurForm';
+import UtilisateurDetail from './components/users/UtilisateurDetail';
 // Modules Logistique/Catégories
 
 
@@ -86,7 +88,13 @@ function App() {
 <Route path="/comptes/:id" element={<CompteDetail />} />
 
 
-
+<Route path="/utilisateurs" element={<Utilisateurs />} />
+  <Route path="/utilisateurs/ajouter" element={<UtilisateurForm />} />
+  <Route path="/utilisateurs/creer" element={<UtilisateurForm />} />
+  
+  {/* Route pour les détails et modification - AVEC paramètre ID */}
+  <Route path="/utilisateurs/:id" element={<UtilisateurDetail />} />
+  <Route path="/utilisateurs/:id/modifier" element={<UtilisateurForm />} />
 
 <Route path="/transactions" element={<Transactions />} />
 <Route path="/transactions/:id" element={<TransactionDetail />} />
