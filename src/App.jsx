@@ -19,6 +19,7 @@ import Comptes from './components/finance/Comptes';
 import CompteDetail from './components/finance/CompteDetail';
 import Transactions from './components/finance/Transactions';
 import TransactionDetail from './components/finance/TransactionDetail';
+import TransfertEntreAgents from './components/finance/TransfertEntreAgents';
 
 import AgentBalanceList from './components/finance/AgentBalanceList';
 import AgentBalanceDetail from './components/finance/AgentBalanceDetail';
@@ -27,6 +28,7 @@ import AgentTransfer from './components/finance/AgentTransfer';
 import Utilisateurs from './components/users/Utilisateurs';
 import UtilisateurForm from './components/users/UtilisateurForm';
 import UtilisateurDetail from './components/users/UtilisateurDetail';
+import RetraitAvecBeneficiaire from './components/finance/RetraitAvecBeneficiaire';
 // Modules Logistique/Catégories
 
 
@@ -104,6 +106,9 @@ function App() {
   <Route path="/agents/:id/balance" element={<AgentBalanceDetail />} />
   <Route path="/agents/me" element={<AgentBalanceMe />} />
   <Route path="/agents/transfer" element={<AgentTransfer />} />
+  <Route path="/transfert-entre-agents" element={<TransfertEntreAgents />} />
+ 
+                <Route path="/retraits" element={<RetraitAvecBeneficiaire />} />
                 {/* ==================== AUDIT ====================
                 <Route path="/audit" element={<AuditLog />} />
  */}

@@ -5,7 +5,7 @@ import {
   ChevronDown, ChevronUp, Menu, X, Bell, Moon, Sun, Shield, Clock, Calendar,
   CreditCard, Send, ArrowLeftRight, Receipt, UserPlus, Search, HelpCircle,
   AlertTriangle, CheckCircle, TrendingUp, BarChart3, History, Wallet,
-  UserCheck, Eye, ListChecks
+  UserCheck, Eye, ListChecks, GitBranch, Repeat, UserCog
 } from 'lucide-react';
 
 import logo from '../assets/logo.svg';
@@ -32,6 +32,7 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
   const [openSections, setOpenSections] = useState({
     'TABLEAU DE BORD': true,
     'PARTENAIRES & FINANCES': true,
+    'OPÉRATIONS': false,
     'AGENTS': false,
     'ADMINISTRATION': false,
     'MON ESPACE': false
@@ -51,6 +52,7 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
   const [transfertsRecents, setTransfertsRecents] = useState(0);
   const [alertesCount, setAlertesCount] = useState(0);
   const [agentsCount, setAgentsCount] = useState(0);
+  const [pendingWithdrawals, setPendingWithdrawals] = useState(0);
 
   // Récupérer l'utilisateur depuis localStorage
   const getUserData = () => {
@@ -97,7 +99,7 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
         // Charger le solde de l'agent si c'est un agent
         if (isAgent) {
           try {
-            const balanceRes = await AxiosInstance.get('/agents-balance/me/');
+            const balanceRes = await AxiosInstance.get('/transactions/agent-balance/');
             setAgentBalance(balanceRes.data);
           } catch (err) {
             console.error('Erreur chargement solde agent:', err);
@@ -112,30 +114,48 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
           } catch (err) {
             console.error('Erreur chargement agents:', err);
           }
-          
-          // Construire les notifications (exemples)
-          const notifs = [];
-          if (agentsCount > 0) {
-            notifs.push({ 
-              id: 'agents', 
-              title: 'Agents actifs', 
-              message: `${agentsCount} agent(s) enregistré(s)`, 
-              link: '/agents', 
-              type: 'info' 
-            });
+
+          try {
+            const statsRes = await AxiosInstance.get('/transactions/global-stats/');
+            // Compter les transactions en attente ou récentes
+            setPendingWithdrawals(statsRes.data?.today?.count || 0);
+          } catch (err) {
+            console.error('Erreur chargement stats:', err);
           }
-          if (alertesCount > 0) {
-            notifs.push({ 
-              id: 'alerts', 
-              title: 'Alertes financières', 
-              message: `${alertesCount} alerte(s)`, 
-              link: '/comptes', 
-              type: 'warning' 
-            });
-          }
-          setNotifications(notifs);
-          setNotificationCount(notifs.length);
         }
+        
+        // Construire les notifications
+        const notifs = [];
+        if (isAdmin && agentsCount > 0) {
+          notifs.push({ 
+            id: 'agents', 
+            title: 'Agents actifs', 
+            message: `${agentsCount} agent(s) enregistré(s)`, 
+            link: '/agents', 
+            type: 'info' 
+          });
+        }
+        if (isAdmin && pendingWithdrawals > 0) {
+          notifs.push({ 
+            id: 'withdrawals', 
+            title: 'Retraits récents', 
+            message: `${pendingWithdrawals} retrait(s) aujourd'hui`, 
+            link: '/transactions', 
+            type: 'warning' 
+          });
+        }
+        if (isAgent && agentBalance && agentBalance.balance < 1000) {
+          notifs.push({ 
+            id: 'low-balance', 
+            title: 'Solde faible', 
+            message: `Votre solde est de ${agentBalance.balance} XOF`, 
+            link: '/agents/me', 
+            type: 'warning' 
+          });
+        }
+        setNotifications(notifs);
+        setNotificationCount(notifs.length);
+        
       } catch (error) {
         console.error('Erreur chargement:', error);
       } finally {
@@ -144,7 +164,7 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
     };
     
     loadData();
-  }, [role, transfertsRecents, alertesCount, agentsCount]);
+  }, [role, transfertsRecents, alertesCount, agentsCount, pendingWithdrawals]);
 
   // Initiale utilisateur
   useEffect(() => {
@@ -164,12 +184,13 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
   const isAdmin = role === 'admin';
   const isAgent = role === 'agent';
   
-  // Méthodes de permission pour le module financier
+  // Méthodes de permission
   const canViewDashboard = () => true;
   const canManagePartners = () => isAdmin;
   const canViewPartners = () => isAdmin || isAgent;
   const canRecordDeposit = () => isAdmin || isAgent;
   const canTransferToAgent = () => isAdmin;
+  const canTransferBetweenAgents = () => isAgent;
   const canRecordWithdrawal = () => isAgent;
   const canViewAccounts = () => isAdmin || isAgent;
   const canViewTransactions = () => isAdmin || isAgent;
@@ -188,7 +209,7 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
     navigate('/');
   };
 
-  // Menu sections (finance, agents, admin, espace)
+  // Menu sections
   const menuSections = [
     {
       name: 'TABLEAU DE BORD',
@@ -206,11 +227,19 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
       items: [
         { id: 'partners', text: 'Partenaires', icon: Users, path: '/partenaires', permission: canViewPartners() },
         { id: 'partners-create', text: 'Nouveau partenaire', icon: UserPlus, path: '/partenaires/ajouter', permission: canManagePartners() },
-        { id: 'deposit', text: 'Dépôt partenaire', icon: CreditCard, path: '/depots', permission: canRecordDeposit() },
-        { id: 'transfer-to-agent', text: 'Transfert → agent', icon: Send, path: '/transferts-vers-agents', permission: canTransferToAgent() },
-        { id: 'withdrawal', text: 'Retrait partenaire', icon: ArrowLeftRight, path: '/retraits', permission: canRecordWithdrawal() },
         { id: 'accounts', text: 'Comptes', icon: DollarSign, path: '/comptes', permission: canViewAccounts() },
         { id: 'transactions', text: 'Transactions', icon: Receipt, path: '/transactions', permission: canViewTransactions() }
+      ]
+    },
+    {
+      name: 'OPÉRATIONS',
+      icon: CreditCard,
+      permission: true,
+      items: [
+        { id: 'deposit', text: 'Dépôt partenaire', icon: CreditCard, path: '/depots', permission: canRecordDeposit() },
+        { id: 'transfer-to-agent', text: 'Transfert Global → Agent', icon: Send, path: '/transferts-vers-agents', permission: canTransferToAgent() },
+        { id: 'transfer-between-agents', text: 'Transfert entre agents', icon: Repeat, path: '/transfert-entre-agents', permission: canTransferBetweenAgents() },
+        { id: 'withdrawal', text: 'Retrait partenaire', icon: ArrowLeftRight, path: '/retraits', permission: canRecordWithdrawal() }
       ]
     },
     {
@@ -688,7 +717,7 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 bg-success rounded-full animate-pulse"></div>
-                  <span className="text-xs text-base-content/50">v1.0.0</span>
+                  <span className="text-xs text-base-content/50">v2.0.0</span>
                 </div>
                 <span className="badge badge-primary badge-sm">Gestion financière</span>
               </div>
@@ -714,7 +743,7 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
         </div>
       </main>
 
-      {/* Menu mobile (version simplifiée) */}
+      {/* Menu mobile */}
       {isMobileMenuOpen && (
         <>
           <div className="fixed inset-0 bg-black/50 z-50 lg:hidden" onClick={() => setIsMobileMenuOpen(false)}></div>
