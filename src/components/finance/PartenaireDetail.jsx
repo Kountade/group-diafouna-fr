@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   Building2, Mail, Phone, MapPin, Calendar, DollarSign, ArrowLeft,
-  Edit, Trash2, CreditCard, Receipt, Loader2, AlertCircle
+  Edit, Trash2, CreditCard, Receipt, Loader2, AlertCircle,
+  FileText, Filter, X
 } from 'lucide-react';
 import AxiosInstance from '../AxiosInstance';
+import PartenairePDF from './PartenairePDF';
+import { PDFViewer, PDFDownloadLink } from '@react-pdf/renderer';
 
 const PartenaireDetail = () => {
   const { id } = useParams();
@@ -16,31 +19,41 @@ const PartenaireDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // États pour les filtres
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [filteredDeposits, setFilteredDeposits] = useState([]);
+  const [filteredWithdrawals, setFilteredWithdrawals] = useState([]);
+  const [showFilters, setShowFilters] = useState(false);
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       setError(null);
       try {
-        // 1. Partenaire
         const partnerRes = await AxiosInstance.get(`/partners/${id}/`);
         setPartner(partnerRes.data);
 
-        // 2. Compte partenaire
         const accountsRes = await AxiosInstance.get(`/accounts/?partner_id=${id}`);
         const partnerAccount = accountsRes.data?.find(acc => acc.account_type === 'partner') || null;
         setAccount(partnerAccount);
 
-        // 3. Transactions du compte (un seul appel)
         if (partnerAccount) {
           const transRes = await AxiosInstance.get(`/transactions/?account=${partnerAccount.id}`);
           const allTx = transRes.data || [];
 
-          // Filtrer côté frontend
-          setDeposits(allTx.filter(tx => tx.transaction_type === 'deposit'));
-          setWithdrawals(allTx.filter(tx => tx.transaction_type === 'withdrawal'));
+          const depositsData = allTx.filter(tx => tx.transaction_type === 'deposit');
+          const withdrawalsData = allTx.filter(tx => tx.transaction_type === 'withdrawal');
+          
+          setDeposits(depositsData);
+          setWithdrawals(withdrawalsData);
+          setFilteredDeposits(depositsData);
+          setFilteredWithdrawals(withdrawalsData);
         } else {
           setDeposits([]);
           setWithdrawals([]);
+          setFilteredDeposits([]);
+          setFilteredWithdrawals([]);
         }
       } catch (err) {
         console.error(err);
@@ -51,6 +64,36 @@ const PartenaireDetail = () => {
     };
     fetchData();
   }, [id]);
+
+  // Appliquer les filtres de date
+  const applyFilters = () => {
+    const filterByDate = (transactions) => {
+      return transactions.filter(tx => {
+        const txDate = new Date(tx.created_at).toISOString().split('T')[0];
+        if (dateFrom && txDate < dateFrom) return false;
+        if (dateTo && txDate > dateTo) return false;
+        return true;
+      });
+    };
+
+    setFilteredDeposits(filterByDate(deposits));
+    setFilteredWithdrawals(filterByDate(withdrawals));
+  };
+
+  // Réinitialiser les filtres
+  const resetFilters = () => {
+    setDateFrom('');
+    setDateTo('');
+    setFilteredDeposits(deposits);
+    setFilteredWithdrawals(withdrawals);
+  };
+
+  // Appliquer les filtres quand les dates changent
+  useEffect(() => {
+    if (deposits.length > 0 || withdrawals.length > 0) {
+      applyFilters();
+    }
+  }, [dateFrom, dateTo, deposits, withdrawals]);
 
   const formatNumber = (number) => {
     if (typeof number !== 'number') number = parseFloat(number) || 0;
@@ -106,6 +149,33 @@ const PartenaireDetail = () => {
           <h1 className="text-3xl font-bold text-base-content">Partenaire</h1>
         </div>
         <div className="flex gap-3">
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="btn btn-outline gap-2"
+          >
+            <Filter className="w-5 h-5" /> Filtres
+          </button>
+          <PDFDownloadLink
+            document={
+              <PartenairePDF
+                partner={partner}
+                account={account}
+                deposits={filteredDeposits}
+                withdrawals={filteredWithdrawals}
+                dateFrom={dateFrom}
+                dateTo={dateTo}
+              />
+            }
+            fileName={`Rapport_${partner.name}_${new Date().toISOString().split('T')[0]}.pdf`}
+            className="btn btn-primary gap-2"
+          >
+            {({ loading }) => (
+              <>
+                <FileText className="w-5 h-5" />
+                {loading ? 'Génération...' : 'PDF'}
+              </>
+            )}
+          </PDFDownloadLink>
           <Link to={`/partenaires/${id}/modifier`} className="btn btn-outline gap-2">
             <Edit className="w-5 h-5" /> Modifier
           </Link>
@@ -114,6 +184,42 @@ const PartenaireDetail = () => {
           </button>
         </div>
       </div>
+
+      {/* Filtres */}
+      {showFilters && (
+        <div className="card bg-base-100 shadow-lg mb-6 p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-bold">Filtrer par période</h3>
+            <button onClick={() => setShowFilters(false)} className="btn btn-ghost btn-sm">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="form-control">
+              <label className="label"><span className="label-text">Du</span></label>
+              <input
+                type="date"
+                className="input input-bordered"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+              />
+            </div>
+            <div className="form-control">
+              <label className="label"><span className="label-text">Au</span></label>
+              <input
+                type="date"
+                className="input input-bordered"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+              />
+            </div>
+            <div className="flex items-end gap-2">
+              <button onClick={applyFilters} className="btn btn-primary flex-1">Appliquer</button>
+              <button onClick={resetFilters} className="btn btn-ghost">Réinitialiser</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Colonne de gauche : infos + listes */}
@@ -160,14 +266,15 @@ const PartenaireDetail = () => {
                 <div className="flex justify-between items-center flex-wrap gap-3 mb-2">
                   <h3 className="text-xl font-bold flex items-center gap-2 text-success">
                     <CreditCard className="w-5 h-5" /> Dépôts
+                    <span className="badge badge-success badge-sm">{filteredDeposits.length}</span>
                   </h3>
                   <Link to={`/depots?partner=${partner.id}`} className="text-primary text-sm">Voir tout →</Link>
                 </div>
-                {deposits.length === 0 ? (
-                  <p className="text-base-content/60 py-2">Aucun dépôt</p>
+                {filteredDeposits.length === 0 ? (
+                  <p className="text-base-content/60 py-2">Aucun dépôt sur cette période</p>
                 ) : (
-                  <div className="space-y-2">
-                    {deposits.slice(0, 5).map((tx) => (
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {filteredDeposits.slice(0, 10).map((tx) => (
                       <div key={tx.id} className="flex justify-between items-center border-b border-base-200 py-2">
                         <div>
                           <p className="font-medium">{formatDate(tx.created_at)}</p>
@@ -176,6 +283,9 @@ const PartenaireDetail = () => {
                         <span className="text-success font-bold">+{formatNumber(tx.amount)} €</span>
                       </div>
                     ))}
+                    {filteredDeposits.length > 10 && (
+                      <p className="text-sm text-base-content/60 text-center">+ {filteredDeposits.length - 10} autres</p>
+                    )}
                   </div>
                 )}
               </div>
@@ -187,14 +297,15 @@ const PartenaireDetail = () => {
                 <div className="flex justify-between items-center flex-wrap gap-3 mb-2">
                   <h3 className="text-xl font-bold flex items-center gap-2 text-error">
                     <CreditCard className="w-5 h-5 rotate-180" /> Retraits
+                    <span className="badge badge-error badge-sm">{filteredWithdrawals.length}</span>
                   </h3>
                   <Link to={`/retraits?partner=${partner.id}`} className="text-primary text-sm">Voir tout →</Link>
                 </div>
-                {withdrawals.length === 0 ? (
-                  <p className="text-base-content/60 py-2">Aucun retrait</p>
+                {filteredWithdrawals.length === 0 ? (
+                  <p className="text-base-content/60 py-2">Aucun retrait sur cette période</p>
                 ) : (
-                  <div className="space-y-2">
-                    {withdrawals.slice(0, 5).map((tx) => (
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {filteredWithdrawals.slice(0, 10).map((tx) => (
                       <div key={tx.id} className="flex justify-between items-center border-b border-base-200 py-2">
                         <div>
                           <p className="font-medium">{formatDate(tx.created_at)}</p>
@@ -203,6 +314,9 @@ const PartenaireDetail = () => {
                         <span className="text-error font-bold">-{formatNumber(tx.amount)} €</span>
                       </div>
                     ))}
+                    {filteredWithdrawals.length > 10 && (
+                      <p className="text-sm text-base-content/60 text-center">+ {filteredWithdrawals.length - 10} autres</p>
+                    )}
                   </div>
                 )}
               </div>
