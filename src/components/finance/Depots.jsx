@@ -59,7 +59,8 @@ const Depots = () => {
   // Filtrage local
   const filteredDeposits = deposits.filter(d => {
     const matchSearch = d.partner_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        d.description?.toLowerCase().includes(searchTerm.toLowerCase());
+                        d.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        d.id?.toString().includes(searchTerm);
     const matchPartner = !filterPartner || d.partner?.toString() === filterPartner;
     let matchDate = true;
     if (startDate) {
@@ -122,7 +123,7 @@ const Depots = () => {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-base-content/40" />
                 <input
                   type="text"
-                  placeholder="Partenaire, description..."
+                  placeholder="N°, partenaire, description..."
                   className="input input-bordered w-full pl-11"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -146,7 +147,7 @@ const Depots = () => {
             </div>
           </div>
           <div className="flex justify-end mt-4">
-            <button onClick={() => { setSearchTerm(''); setFilterPartner(''); setStartDate(''); setEndDate(''); }} className="btn btn-outline btn-sm gap-1">
+            <button onClick={() => { setSearchTerm(''); setFilterPartner(''); setStartDate(''); setEndDate(''); setPage(0); }} className="btn btn-outline btn-sm gap-1">
               <Filter className="w-4 h-4" /> Réinitialiser
             </button>
           </div>
@@ -195,7 +196,7 @@ const Depots = () => {
                             <Eye className="w-5 h-5" />
                           </button>
                           <button
-                            onClick={() => navigate(`/depots/${d.id}/pdf`)}
+                            onClick={() => navigate(`/depots/${d.id}/pdf`, { state: { transaction: d } })}
                             className="btn btn-ghost btn-sm tooltip"
                             data-tip="PDF"
                           >
