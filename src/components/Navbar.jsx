@@ -11,7 +11,7 @@ import {
 import logo from '../assets/logo.svg';
 import AxiosInstance from './AxiosInstance';
 
-// Configuration des rôles (admin et agent uniquement)
+// Configuration des rôles
 const ROLE_CONFIG = {
   admin: { label: 'Administrateur', color: 'error', icon: Shield, description: 'Accès total', level: 100 },
   agent: { label: 'Agent', color: 'primary', icon: Users, description: 'Opérations terrain', level: 60 }
@@ -48,7 +48,6 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [agentBalance, setAgentBalance] = useState(null);
   
-  // Compteurs (optionnels)
   const [transfertsRecents, setTransfertsRecents] = useState(0);
   const [alertesCount, setAlertesCount] = useState(0);
   const [agentsCount, setAgentsCount] = useState(0);
@@ -96,7 +95,6 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
         const isAdmin = role === 'admin';
         const isAgent = role === 'agent';
         
-        // Charger le solde de l'agent si c'est un agent
         if (isAgent) {
           try {
             const balanceRes = await AxiosInstance.get('/transactions/agent-balance/');
@@ -106,7 +104,6 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
           }
         }
         
-        // Charger des compteurs pour les notifications
         if (isAdmin) {
           try {
             const agentsRes = await AxiosInstance.get('/agents-balance/');
@@ -117,14 +114,12 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
 
           try {
             const statsRes = await AxiosInstance.get('/transactions/global-stats/');
-            // Compter les transactions en attente ou récentes
             setPendingWithdrawals(statsRes.data?.today?.count || 0);
           } catch (err) {
             console.error('Erreur chargement stats:', err);
           }
         }
         
-        // Construire les notifications
         const notifs = [];
         if (isAdmin && agentsCount > 0) {
           notifs.push({ 
@@ -180,11 +175,10 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
   const roleConfig = ROLE_CONFIG[role] || ROLE_CONFIG.agent;
   const RoleIcon = roleConfig.icon;
   
-  // Permissions simplifiées
   const isAdmin = role === 'admin';
   const isAgent = role === 'agent';
   
-  // Méthodes de permission
+  // Permissions
   const canViewDashboard = () => true;
   const canManagePartners = () => isAdmin;
   const canViewPartners = () => isAdmin || isAgent;
@@ -197,6 +191,7 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
   const canViewAdmin = () => isAdmin;
   const canViewAgents = () => isAdmin;
   const canViewMyBalance = () => isAgent;
+  const canViewRecipients = () => isAdmin || isAgent;   // ← NOUVELLE PERMISSION
 
   const handleSectionToggle = (section) => {
     setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
@@ -239,7 +234,9 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
         { id: 'deposit', text: 'Dépôt partenaire', icon: CreditCard, path: '/depots', permission: canRecordDeposit() },
         { id: 'transfer-to-agent', text: 'Transfert Global → Agent', icon: Send, path: '/transferts-vers-agents', permission: canTransferToAgent() },
         { id: 'transfer-between-agents', text: 'Transfert entre agents', icon: Repeat, path: '/transfert-entre-agents', permission: canTransferBetweenAgents() },
-        { id: 'withdrawal', text: 'Retrait partenaire', icon: ArrowLeftRight, path: '/retraits', permission: canRecordWithdrawal() }
+        { id: 'withdrawal', text: 'Retrait partenaire', icon: ArrowLeftRight, path: '/retraits', permission: canRecordWithdrawal() },
+        // 👇 NOUVEL ITEM BÉNÉFICIAIRES
+        { id: 'recipients', text: 'Bénéficiaires', icon: UserCheck, path: '/beneficiaires', permission: canViewRecipients() }
       ]
     },
     {
@@ -247,13 +244,11 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
       icon: Users,
       permission: isAdmin || isAgent,
       items: [
-        // Admin
         ...(isAdmin ? [
           { id: 'agents-list', text: 'Liste des agents', icon: ListChecks, path: '/agents', permission: isAdmin },
           { id: 'agents-balance', text: 'Soldes des agents', icon: Wallet, path: '/agents', permission: isAdmin },
           { id: 'agents-transfer', text: 'Transférer à un agent', icon: Send, path: '/agents/transfer', permission: isAdmin }
         ] : []),
-        // Agent
         ...(isAgent ? [
           { id: 'my-balance', text: 'Mon solde', icon: Wallet, path: '/agents/me', permission: isAgent },
           { id: 'my-transactions', text: 'Mes transactions', icon: Receipt, path: '/transactions', permission: isAgent }
@@ -418,7 +413,6 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
                 <span className="text-sm font-medium text-primary-content">{formattedTime}</span>
               </div>
               
-              {/* Solde de l'agent dans la barre */}
               {isAgent && agentBalance && (
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-success/20 backdrop-blur-sm border border-success/30">
                   <Wallet className="w-4 h-4 text-success" />

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 
 const styles = StyleSheet.create({
   page: {
@@ -89,6 +89,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     paddingHorizontal: 6,
     borderBottom: '1px solid #eaeaea',
+    alignItems: 'center',
   },
   tableCell: {
     fontSize: 8,
@@ -216,7 +217,7 @@ const PartenairePDF = ({ partner, account, deposits, withdrawals, dateFrom, date
           </View>
         </View>
 
-        {/* Tableau des dépôts */}
+        {/* Tableau des dépôts (inchangé) */}
         {deposits.length > 0 && (
           <>
             <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#27ae60', marginTop: 10 }}>
@@ -248,7 +249,7 @@ const PartenairePDF = ({ partner, account, deposits, withdrawals, dateFrom, date
           </>
         )}
 
-        {/* Tableau des retraits */}
+        {/* Tableau des retraits AVEC bénéficiaire */}
         {withdrawals.length > 0 && (
           <>
             <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#e74c3c', marginTop: 10 }}>
@@ -256,23 +257,31 @@ const PartenairePDF = ({ partner, account, deposits, withdrawals, dateFrom, date
             </Text>
             <View style={styles.table}>
               <View style={styles.tableHeader}>
-                <Text style={styles.tableHeaderCell}>Date</Text>
-                <Text style={styles.tableHeaderCell}>Description</Text>
-                <Text style={[styles.tableHeaderCell, { textAlign: 'right' }]}>Montant</Text>
+                <Text style={[styles.tableHeaderCell, { flex: 1.2 }]}>Date</Text>
+                <Text style={[styles.tableHeaderCell, { flex: 1.5 }]}>Bénéficiaire</Text>
+                <Text style={[styles.tableHeaderCell, { flex: 1.5 }]}>Description</Text>
+                <Text style={[styles.tableHeaderCell, { flex: 1, textAlign: 'right' }]}>Montant</Text>
               </View>
               {withdrawals.map((tx) => (
                 <View key={tx.id} style={styles.tableRow}>
-                  <Text style={styles.tableCell}>{formatDate(tx.created_at)}</Text>
-                  <Text style={styles.tableCell}>{tx.description || '—'}</Text>
-                  <Text style={[styles.tableCell, styles.amountNegative, { textAlign: 'right' }]}>
+                  <Text style={[styles.tableCell, { flex: 1.2 }]}>{formatDate(tx.created_at)}</Text>
+                  <View style={[styles.tableCell, { flex: 1.5 }]}>
+                    <Text>{tx.recipient_name || '—'}</Text>
+                    {tx.recipient_phone && (
+                      <Text style={{ fontSize: 6, color: '#7f8c8d' }}>{tx.recipient_phone}</Text>
+                    )}
+                  </View>
+                  <Text style={[styles.tableCell, { flex: 1.5 }]}>{tx.description || '—'}</Text>
+                  <Text style={[styles.tableCell, styles.amountNegative, { flex: 1, textAlign: 'right' }]}>
                     - {formatNumber(tx.amount)} GNF
                   </Text>
                 </View>
               ))}
               <View style={[styles.tableRow, { backgroundColor: '#faf0f0', fontWeight: 'bold' }]}>
-                <Text style={styles.tableCell}>Total</Text>
-                <Text style={styles.tableCell}></Text>
-                <Text style={[styles.tableCell, styles.amountNegative, { textAlign: 'right' }]}>
+                <Text style={[styles.tableCell, { flex: 1.2 }]}>Total</Text>
+                <Text style={[styles.tableCell, { flex: 1.5 }]}></Text>
+                <Text style={[styles.tableCell, { flex: 1.5 }]}></Text>
+                <Text style={[styles.tableCell, styles.amountNegative, { flex: 1, textAlign: 'right' }]}>
                   - {formatNumber(totalWithdrawals)} GNF
                 </Text>
               </View>

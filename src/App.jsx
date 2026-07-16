@@ -29,6 +29,10 @@ import Utilisateurs from './components/users/Utilisateurs';
 import UtilisateurForm from './components/users/UtilisateurForm';
 import UtilisateurDetail from './components/users/UtilisateurDetail';
 import RetraitAvecBeneficiaire from './components/finance/RetraitAvecBeneficiaire';
+
+import Beneficiaires from './components/finance/Beneficiaires';
+import BeneficiaireForm from './components/finance/BeneficiaireForm';
+import BeneficiaireDetail from './components/finance/BeneficiaireDetail';
 // Modules Logistique/Catégories
 
 
@@ -107,7 +111,12 @@ function App() {
   <Route path="/agents/me" element={<AgentBalanceMe />} />
   <Route path="/agents/transfer" element={<AgentTransfer />} />
   <Route path="/transfert-entre-agents" element={<TransfertEntreAgents />} />
- 
+
+  
+ <Route path="/beneficiaires" element={<Beneficiaires />} />
+<Route path="/beneficiaires/ajouter" element={<BeneficiaireForm />} />
+<Route path="/beneficiaires/:id" element={<BeneficiaireDetail />} />
+<Route path="/beneficiaires/:id/modifier" element={<BeneficiaireForm />} />
                 <Route path="/retraits" element={<RetraitAvecBeneficiaire />} />
                 {/* ==================== AUDIT ====================
                 <Route path="/audit" element={<AuditLog />} />

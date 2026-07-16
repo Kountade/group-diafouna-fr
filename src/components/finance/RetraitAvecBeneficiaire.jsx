@@ -1,4 +1,3 @@
-// pages/RetraitAvecBeneficiaire.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
@@ -34,7 +33,9 @@ const RetraitAvecBeneficiaire = () => {
     recipient_address: ''
   });
 
-  // Charger les partenaires et bénéficiaires
+  // Limite d'affichage pour la recherche
+  const MAX_DISPLAY = 20;
+
   useEffect(() => {
     fetchPartners();
     fetchRecipients();
@@ -52,10 +53,11 @@ const RetraitAvecBeneficiaire = () => {
   const fetchRecipients = async () => {
     setLoadingRecipients(true);
     try {
-      const response = await AxiosInstance.get('/transactions/recipients/');
+      const response = await AxiosInstance.get('/recipients/');
       setRecipients(response.data);
     } catch (err) {
       console.error('Erreur chargement bénéficiaires:', err);
+      setError('Impossible de charger la liste des bénéficiaires');
     } finally {
       setLoadingRecipients(false);
     }
@@ -94,7 +96,7 @@ const RetraitAvecBeneficiaire = () => {
         dataToSend.recipient_address = formData.recipient_address;
       }
 
-      const response = await AxiosInstance.post('/transactions/withdraw/', dataToSend);
+      await AxiosInstance.post('/transactions/withdraw/', dataToSend);
       setSuccess(true);
       setTimeout(() => {
         navigate('/transactions');
@@ -107,11 +109,22 @@ const RetraitAvecBeneficiaire = () => {
     }
   };
 
-  const filteredRecipients = recipients.filter(r => 
-    r.full_name.toLowerCase().includes(searchRecipient.toLowerCase()) ||
-    r.phone.includes(searchRecipient) ||
-    r.document_number.toLowerCase().includes(searchRecipient.toLowerCase())
-  );
+  // Filtrage des bénéficiaires avec limite d'affichage
+  const filteredRecipients = recipients.filter(r => {
+    const search = searchRecipient.toLowerCase();
+    return (
+      r.full_name?.toLowerCase().includes(search) ||
+      r.phone?.includes(searchRecipient) ||
+      r.document_number?.toLowerCase().includes(search)
+    );
+  });
+
+  // On limite l'affichage à MAX_DISPLAY
+  const displayedRecipients = filteredRecipients.slice(0, MAX_DISPLAY);
+  const hasMore = filteredRecipients.length > MAX_DISPLAY;
+
+  // On récupère le bénéficiaire sélectionné pour l'afficher si nécessaire
+  const selectedRecipient = recipients.find(r => r.id === parseInt(formData.recipient_id));
 
   const selectedPartner = partners.find(p => p.id === parseInt(formData.partner_id));
 
@@ -212,7 +225,7 @@ const RetraitAvecBeneficiaire = () => {
 
             <div className="divider text-base-content/40">BÉNÉFICIAIRE DU RETRAIT</div>
 
-            {/* Utiliser un bénéficiaire existant ou en créer un nouveau */}
+            {/* Option : bénéficiaire existant ou nouveau */}
             <div className="form-control mb-4">
               <div className="flex flex-wrap gap-4">
                 <label className="label cursor-pointer gap-2">
@@ -221,7 +234,7 @@ const RetraitAvecBeneficiaire = () => {
                     name="use_existing_recipient"
                     value={true}
                     checked={formData.use_existing_recipient === true}
-                    onChange={() => setFormData(prev => ({ ...prev, use_existing_recipient: true }))}
+                    onChange={() => setFormData(prev => ({ ...prev, use_existing_recipient: true, recipient_id: '' }))}
                     className="radio radio-primary"
                   />
                   <span className="label-text">Bénéficiaire existant</span>
@@ -241,7 +254,7 @@ const RetraitAvecBeneficiaire = () => {
             </div>
 
             {formData.use_existing_recipient ? (
-              // Sélection d'un bénéficiaire existant
+              // Sélection d'un bénéficiaire existant avec recherche et select limité
               <div className="form-control mb-4">
                 <label className="label">
                   <span className="label-text font-medium flex items-center gap-2">
@@ -259,25 +272,70 @@ const RetraitAvecBeneficiaire = () => {
                     onChange={(e) => setSearchRecipient(e.target.value)}
                   />
                 </div>
-                <select
-                  name="recipient_id"
-                  className="select select-bordered w-full mt-2"
-                  value={formData.recipient_id}
-                  onChange={handleChange}
-                >
-                  <option value="">Choisir un bénéficiaire...</option>
-                  {filteredRecipients.map((recipient) => (
-                    <option key={recipient.id} value={recipient.id}>
-                      {recipient.full_name} - {recipient.phone} ({recipient.document_number})
-                    </option>
-                  ))}
-                </select>
-                {loadingRecipients && (
-                  <Loader2 className="w-4 h-4 animate-spin mt-2" />
+                {loadingRecipients ? (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                    <span className="ml-2 text-sm text-base-content/60">Chargement...</span>
+                  </div>
+                ) : (
+                  <>
+                    <select
+                      name="recipient_id"
+                      className="select select-bordered w-full mt-2"
+                      value={formData.recipient_id}
+                      onChange={handleChange}
+                    >
+                      <option value="">Choisir un bénéficiaire...</option>
+                      {displayedRecipients.map((recipient) => (
+                        <option key={recipient.id} value={recipient.id}>
+                          {recipient.full_name} - {recipient.phone} ({recipient.document_number})
+                        </option>
+                      ))}
+                    </select>
+                    {hasMore && (
+                      <p className="text-xs text-base-content/40 mt-1">
+                        {filteredRecipients.length} bénéficiaires trouvés, affichage des {MAX_DISPLAY} premiers. 
+                        Affinez votre recherche.
+                      </p>
+                    )}
+                    {filteredRecipients.length === 0 && searchRecipient && (
+                      <div className="text-center py-2 text-base-content/60">
+                        <p>Aucun bénéficiaire ne correspond à votre recherche.</p>
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-sm mt-2 gap-2"
+                          onClick={() => setFormData(prev => ({ ...prev, use_existing_recipient: false }))}
+                        >
+                          <UserPlus className="w-4 h-4" />
+                          Créer un nouveau bénéficiaire
+                        </button>
+                      </div>
+                    )}
+                    {filteredRecipients.length === 0 && !searchRecipient && recipients.length === 0 && (
+                      <div className="text-center py-2 text-base-content/60">
+                        <p>Aucun bénéficiaire enregistré.</p>
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-sm mt-2 gap-2"
+                          onClick={() => setFormData(prev => ({ ...prev, use_existing_recipient: false }))}
+                        >
+                          <UserPlus className="w-4 h-4" />
+                          Créer le premier bénéficiaire
+                        </button>
+                      </div>
+                    )}
+                    {/* Afficher le bénéficiaire sélectionné s'il n'est pas dans la liste affichée */}
+                    {formData.recipient_id && selectedRecipient && !displayedRecipients.some(r => r.id === parseInt(formData.recipient_id)) && (
+                      <div className="mt-2 p-2 bg-primary/10 rounded-lg border border-primary/30">
+                        <p className="text-sm font-medium">Bénéficiaire sélectionné :</p>
+                        <p className="text-sm">{selectedRecipient.full_name} - {selectedRecipient.phone}</p>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             ) : (
-              // Création d'un nouveau bénéficiaire
+              // Création d'un nouveau bénéficiaire (inchangé)
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="form-control">
                   <label className="label">
@@ -327,7 +385,7 @@ const RetraitAvecBeneficiaire = () => {
                     value={formData.recipient_phone}
                     onChange={handleChange}
                     required={!formData.use_existing_recipient}
-                    placeholder="+221 XX XXX XX XX"
+                    placeholder="+224 XX XXX XX XX"
                   />
                 </div>
 
@@ -424,7 +482,7 @@ const RetraitAvecBeneficiaire = () => {
                   <span className="text-base-content/60">Bénéficiaire</span>
                   <span className="font-medium">
                     {formData.use_existing_recipient && formData.recipient_id 
-                      ? recipients.find(r => r.id === parseInt(formData.recipient_id))?.full_name || 'Sélectionné'
+                      ? selectedRecipient?.full_name || 'Sélectionné'
                       : formData.recipient_first_name && formData.recipient_last_name 
                         ? `${formData.recipient_first_name} ${formData.recipient_last_name}`
                         : 'À renseigner'}
@@ -455,7 +513,8 @@ const RetraitAvecBeneficiaire = () => {
                 ) : (
                   <>
                     <CreditCard className="w-5 h-5" />
-                    Effectuer le retrait                  </>
+                    Effectuer le retrait
+                  </>
                 )}
               </button>
             </div>
