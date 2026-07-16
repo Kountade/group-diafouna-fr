@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   Plus, Search, RefreshCw, Filter, Eye, FileText, Users, CreditCard,
-  Loader2, XCircle, CheckCircle, Calendar, ArrowLeftRight
+  Loader2, XCircle, CheckCircle
 } from 'lucide-react';
 import AxiosInstance from '../AxiosInstance';
 import { useNavigate, Link } from 'react-router-dom';
@@ -37,11 +37,10 @@ const Depots = () => {
   const fetchDeposits = async () => {
     setLoading(true);
     try {
-      // Récupérer toutes les transactions de type deposit
-      const response = await AxiosInstance.get('/transactions/?type=deposit');
+      // ✅ CORRECTION : utiliser transaction_type=deposit
+      const response = await AxiosInstance.get('/transactions/?transaction_type=deposit');
       setDeposits(response.data || []);
       
-      // Récupérer les partenaires pour le filtre
       const partnersRes = await AxiosInstance.get('/partners/');
       setPartners(partnersRes.data || []);
     } catch (error) {
@@ -56,10 +55,9 @@ const Depots = () => {
     fetchDeposits();
   }, []);
 
-  // Filtrage local
   const filteredDeposits = deposits.filter(d => {
-    const matchSearch = d.partner_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        d.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const matchSearch = (d.partner_name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+                        (d.description?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
                         d.id?.toString().includes(searchTerm);
     const matchPartner = !filterPartner || d.partner?.toString() === filterPartner;
     let matchDate = true;
@@ -98,7 +96,6 @@ const Depots = () => {
       )}
 
       <div className="w-full">
-        {/* En-tête */}
         <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
           <div>
             <h1 className="text-3xl font-bold text-base-content">Dépôts partenaires</h1>
@@ -114,7 +111,6 @@ const Depots = () => {
           </div>
         </div>
 
-        {/* Filtres */}
         <div className="card bg-base-100 shadow-lg mb-6 p-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="form-control">
@@ -153,7 +149,6 @@ const Depots = () => {
           </div>
         </div>
 
-        {/* Tableau */}
         <div className="card bg-base-100 shadow-xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="table w-full">
@@ -181,7 +176,7 @@ const Depots = () => {
                       <td className="font-mono text-sm">#{d.id}</td>
                       <td className="flex items-center gap-2">
                         <Users className="w-5 h-5 text-base-content/40" />
-                        {d.partner_name || (d.to_account?.partner?.name) || '—'}
+                        {d.partner_name || '—'}
                       </td>
                       <td>{formatDate(d.created_at)}</td>
                       <td className="text-success font-bold">{formatNumber(d.amount)} €</td>
@@ -210,7 +205,6 @@ const Depots = () => {
               </tbody>
             </table>
           </div>
-          {/* Pagination */}
           <div className="flex justify-between items-center p-4 border-t border-base-200">
             <div className="flex items-center gap-3">
               <span>Lignes par page :</span>
@@ -239,3 +233,5 @@ const Depots = () => {
 };
 
 export default Depots;
+
+

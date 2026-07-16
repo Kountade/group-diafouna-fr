@@ -11,7 +11,8 @@ const PartenaireDetail = () => {
   const navigate = useNavigate();
   const [partner, setPartner] = useState(null);
   const [account, setAccount] = useState(null);
-  const [recentTransactions, setRecentTransactions] = useState([]);
+  const [deposits, setDeposits] = useState([]);
+  const [withdrawals, setWithdrawals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -20,18 +21,26 @@ const PartenaireDetail = () => {
       setLoading(true);
       setError(null);
       try {
+        // 1. Partenaire
         const partnerRes = await AxiosInstance.get(`/partners/${id}/`);
         setPartner(partnerRes.data);
 
+        // 2. Compte partenaire
         const accountsRes = await AxiosInstance.get(`/accounts/?partner_id=${id}`);
         const partnerAccount = accountsRes.data?.find(acc => acc.account_type === 'partner') || null;
         setAccount(partnerAccount);
 
+        // 3. Transactions du compte (un seul appel)
         if (partnerAccount) {
-          const transRes = await AxiosInstance.get(`/transactions/?account=${partnerAccount.id}&limit=5`);
-          setRecentTransactions(transRes.data || []);
+          const transRes = await AxiosInstance.get(`/transactions/?account=${partnerAccount.id}`);
+          const allTx = transRes.data || [];
+
+          // Filtrer côté frontend
+          setDeposits(allTx.filter(tx => tx.transaction_type === 'deposit'));
+          setWithdrawals(allTx.filter(tx => tx.transaction_type === 'withdrawal'));
         } else {
-          setRecentTransactions([]);
+          setDeposits([]);
+          setWithdrawals([]);
         }
       } catch (err) {
         console.error(err);
@@ -106,9 +115,8 @@ const PartenaireDetail = () => {
         </div>
       </div>
 
-      {/* Grille à 2 colonnes sur grand écran */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Colonne de gauche : infos partenaire */}
+        {/* Colonne de gauche : infos + listes */}
         <div className="lg:col-span-2 space-y-6">
           {/* Carte d'identité */}
           <div className="card bg-base-100 shadow-xl">
@@ -144,47 +152,60 @@ const PartenaireDetail = () => {
             </div>
           </div>
 
-          {/* Dernières transactions */}
-          <div className="card bg-base-100 shadow-xl">
-            <div className="card-body">
-              <div className="flex justify-between items-center flex-wrap gap-3 mb-2">
-                <h3 className="text-xl font-bold flex items-center gap-2">
-                  <Receipt className="w-5 h-5" /> Dernières transactions
-                </h3>
-                <Link to={`/transactions?partner=${partner.id}`} className="text-primary text-sm">Voir tout →</Link>
-              </div>
-              {recentTransactions.length === 0 ? (
-                <p className="text-base-content/60 py-4">Aucune transaction enregistrée pour ce partenaire.</p>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="table table-zebra w-full">
-                    <thead>
-                      <tr className="bg-base-200">
-                        <th>Date</th>
-                        <th>Type</th>
-                        <th>Montant</th>
-                        <th>Description</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {recentTransactions.map((tx) => (
-                        <tr key={tx.id}>
-                          <td>{formatDate(tx.created_at)}</td>
-                          <td>
-                            <span className={`badge ${tx.transaction_type === 'deposit' ? 'badge-success' : 'badge-warning'}`}>
-                              {tx.transaction_type === 'deposit' ? 'Dépôt' : 'Retrait'}
-                            </span>
-                           </td>
-                          <td className={tx.transaction_type === 'deposit' ? 'text-success font-bold' : 'text-error font-bold'}>
-                            {tx.transaction_type === 'deposit' ? '+' : '-'} {formatNumber(tx.amount)} €
-                          </td>
-                          <td>{tx.description || '—'}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+          {/* Deux cartes : Dépôts et Retraits côte à côte */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Dépôts */}
+            <div className="card bg-base-100 shadow-xl">
+              <div className="card-body">
+                <div className="flex justify-between items-center flex-wrap gap-3 mb-2">
+                  <h3 className="text-xl font-bold flex items-center gap-2 text-success">
+                    <CreditCard className="w-5 h-5" /> Dépôts
+                  </h3>
+                  <Link to={`/depots?partner=${partner.id}`} className="text-primary text-sm">Voir tout →</Link>
                 </div>
-              )}
+                {deposits.length === 0 ? (
+                  <p className="text-base-content/60 py-2">Aucun dépôt</p>
+                ) : (
+                  <div className="space-y-2">
+                    {deposits.slice(0, 5).map((tx) => (
+                      <div key={tx.id} className="flex justify-between items-center border-b border-base-200 py-2">
+                        <div>
+                          <p className="font-medium">{formatDate(tx.created_at)}</p>
+                          <p className="text-sm text-base-content/60">{tx.description || '—'}</p>
+                        </div>
+                        <span className="text-success font-bold">+{formatNumber(tx.amount)} €</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Retraits */}
+            <div className="card bg-base-100 shadow-xl">
+              <div className="card-body">
+                <div className="flex justify-between items-center flex-wrap gap-3 mb-2">
+                  <h3 className="text-xl font-bold flex items-center gap-2 text-error">
+                    <CreditCard className="w-5 h-5 rotate-180" /> Retraits
+                  </h3>
+                  <Link to={`/retraits?partner=${partner.id}`} className="text-primary text-sm">Voir tout →</Link>
+                </div>
+                {withdrawals.length === 0 ? (
+                  <p className="text-base-content/60 py-2">Aucun retrait</p>
+                ) : (
+                  <div className="space-y-2">
+                    {withdrawals.slice(0, 5).map((tx) => (
+                      <div key={tx.id} className="flex justify-between items-center border-b border-base-200 py-2">
+                        <div>
+                          <p className="font-medium">{formatDate(tx.created_at)}</p>
+                          <p className="text-sm text-base-content/60">{tx.description || '—'}</p>
+                        </div>
+                        <span className="text-error font-bold">-{formatNumber(tx.amount)} €</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

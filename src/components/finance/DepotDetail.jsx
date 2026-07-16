@@ -18,10 +18,11 @@ const DepotDetail = () => {
       try {
         const res = await AxiosInstance.get(`/transactions/${id}/`);
         if (res.data.transaction_type !== 'deposit') {
-          setError('Cette transaction n\'est pas un dépôt');
-        } else {
-          setTransaction(res.data);
+          // ✅ Redirection silencieuse vers la liste
+          navigate('/depots');
+          return;
         }
+        setTransaction(res.data);
       } catch (err) {
         setError('Dépôt introuvable');
       } finally {
@@ -29,7 +30,7 @@ const DepotDetail = () => {
       }
     };
     fetchDeposit();
-  }, [id]);
+  }, [id, navigate]);
 
   const formatNumber = (num) => {
     return new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(num);
@@ -73,7 +74,6 @@ const DepotDetail = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Carte principale */}
         <div className="lg:col-span-2">
           <div className="card bg-base-100 shadow-xl">
             <div className="card-body">
@@ -97,7 +97,7 @@ const DepotDetail = () => {
                     <Users className="w-5 h-5 text-base-content/40" />
                     <div>
                       <p className="text-sm text-base-content/60">Partenaire</p>
-                      <p className="font-semibold">{transaction.partner_name || transaction.to_account?.partner?.name || '—'}</p>
+                      <p className="font-semibold">{transaction.partner_name || '—'}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
@@ -141,7 +141,6 @@ const DepotDetail = () => {
           </div>
         </div>
 
-        {/* Colonne latérale - Actions */}
         <div className="lg:col-span-1">
           <div className="card bg-primary/5 shadow-xl">
             <div className="card-body">
