@@ -191,7 +191,8 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
   const canViewAdmin = () => isAdmin;
   const canViewAgents = () => isAdmin;
   const canViewMyBalance = () => isAgent;
-  const canViewRecipients = () => isAdmin || isAgent;   // ← NOUVELLE PERMISSION
+  const canViewRecipients = () => isAdmin || isAgent;
+  const canViewStatistics = () => isAdmin;
 
   const handleSectionToggle = (section) => {
     setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
@@ -204,15 +205,15 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
     navigate('/');
   };
 
-  // Menu sections
+  // Menu sections - ANALYSES SUPPRIMÉ
   const menuSections = [
     {
       name: 'TABLEAU DE BORD',
       icon: LayoutDashboard,
       items: [
         { id: 'dashboard', text: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', permission: canViewDashboard() },
-        { id: 'statistiques', text: 'Statistiques financières', icon: TrendingUp, path: '/statistiques', permission: isAdmin },
-        { id: 'analyses', text: 'Analyses', icon: BarChart3, path: '/analyses', permission: isAdmin }
+        { id: 'statistiques', text: 'Statistiques financières', icon: TrendingUp, path: '/statistiques', permission: canViewStatistics() }
+        // ANALYSES SUPPRIMÉ ICI
       ]
     },
     {
@@ -235,7 +236,6 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
         { id: 'transfer-to-agent', text: 'Transfert Global → Agent', icon: Send, path: '/transferts-vers-agents', permission: canTransferToAgent() },
         { id: 'transfer-between-agents', text: 'Transfert entre agents', icon: Repeat, path: '/transfert-entre-agents', permission: canTransferBetweenAgents() },
         { id: 'withdrawal', text: 'Retrait partenaire', icon: ArrowLeftRight, path: '/retraits', permission: canRecordWithdrawal() },
-        // 👇 NOUVEL ITEM BÉNÉFICIAIRES
         { id: 'recipients', text: 'Bénéficiaires', icon: UserCheck, path: '/beneficiaires', permission: canViewRecipients() }
       ]
     },

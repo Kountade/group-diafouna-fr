@@ -23,7 +23,6 @@ const RetraitAvecBeneficiaire = () => {
     description: '',
     use_existing_recipient: true,
     recipient_id: '',
-    // Nouveau bénéficiaire
     recipient_first_name: '',
     recipient_last_name: '',
     recipient_phone: '',
@@ -33,7 +32,6 @@ const RetraitAvecBeneficiaire = () => {
     recipient_address: ''
   });
 
-  // Limite d'affichage pour la recherche
   const MAX_DISPLAY = 20;
 
   useEffect(() => {
@@ -109,7 +107,6 @@ const RetraitAvecBeneficiaire = () => {
     }
   };
 
-  // Filtrage des bénéficiaires avec limite d'affichage
   const filteredRecipients = recipients.filter(r => {
     const search = searchRecipient.toLowerCase();
     return (
@@ -119,17 +116,14 @@ const RetraitAvecBeneficiaire = () => {
     );
   });
 
-  // On limite l'affichage à MAX_DISPLAY
   const displayedRecipients = filteredRecipients.slice(0, MAX_DISPLAY);
   const hasMore = filteredRecipients.length > MAX_DISPLAY;
-
-  // On récupère le bénéficiaire sélectionné pour l'afficher si nécessaire
   const selectedRecipient = recipients.find(r => r.id === parseInt(formData.recipient_id));
-
   const selectedPartner = partners.find(p => p.id === parseInt(formData.partner_id));
 
   return (
-    <div className="w-full max-w-3xl mx-auto">
+    <div className="w-full px-4 py-6">
+      {/* En-tête */}
       <div className="flex items-center gap-4 mb-6">
         <button onClick={() => navigate(-1)} className="btn btn-ghost btn-circle">
           <ArrowLeft className="w-6 h-6" />
@@ -157,70 +151,73 @@ const RetraitAvecBeneficiaire = () => {
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
           <form onSubmit={handleSubmit}>
-            {/* Partenaire */}
-            <div className="form-control mb-4">
-              <label className="label">
-                <span className="label-text font-medium flex items-center gap-2">
-                  <Users className="w-4 h-4 text-primary" />
-                  Partenaire *
-                </span>
-              </label>
-              <select
-                name="partner_id"
-                className="select select-bordered w-full"
-                value={formData.partner_id}
-                onChange={handleChange}
-                required
-              >
-                <option value="">Sélectionner un partenaire...</option>
-                {partners.map((partner) => (
-                  <option key={partner.id} value={partner.id}>
-                    {partner.name} - {partner.email}
-                  </option>
-                ))}
-              </select>
-              {selectedPartner && (
-                <div className="mt-2 text-sm text-base-content/60">
-                  <p>📧 {selectedPartner.email}</p>
-                  <p>📞 {selectedPartner.phone || 'Non renseigné'}</p>
-                </div>
-              )}
-            </div>
+            {/* Ligne 1 : Partenaire + Montant + Description */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+              {/* Partenaire */}
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text font-medium flex items-center gap-2">
+                    <Users className="w-4 h-4 text-primary" />
+                    Partenaire *
+                  </span>
+                </label>
+                <select
+                  name="partner_id"
+                  className="select select-bordered w-full"
+                  value={formData.partner_id}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Sélectionner un partenaire...</option>
+                  {partners.map((partner) => (
+                    <option key={partner.id} value={partner.id}>
+                      {partner.name} - {partner.email}
+                    </option>
+                  ))}
+                </select>
+                {selectedPartner && (
+                  <div className="mt-2 text-sm text-base-content/60 flex flex-wrap gap-3">
+                    <span>📧 {selectedPartner.email}</span>
+                    <span>📞 {selectedPartner.phone || 'Non renseigné'}</span>
+                  </div>
+                )}
+              </div>
 
-            {/* Montant */}
-            <div className="form-control mb-4">
-              <label className="label">
-                <span className="label-text font-medium flex items-center gap-2">
-                  <DollarSign className="w-4 h-4 text-primary" />
-                  Montant (XOF) *
-                </span>
-              </label>
-              <input
-                type="number"
-                name="amount"
-                className="input input-bordered w-full"
-                value={formData.amount}
-                onChange={handleChange}
-                min="0.01"
-                step="0.01"
-                placeholder="0.00"
-                required
-              />
-            </div>
+              {/* Montant */}
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text font-medium flex items-center gap-2">
+                    <DollarSign className="w-4 h-4 text-primary" />
+                    Montant (XOF) *
+                  </span>
+                </label>
+                <input
+                  type="number"
+                  name="amount"
+                  className="input input-bordered w-full"
+                  value={formData.amount}
+                  onChange={handleChange}
+                  min="0.01"
+                  step="0.01"
+                  placeholder="0.00"
+                  required
+                />
+              </div>
 
-            {/* Description */}
-            <div className="form-control mb-4">
-              <label className="label">
-                <span className="label-text font-medium">Description</span>
-              </label>
-              <textarea
-                name="description"
-                className="textarea textarea-bordered w-full"
-                value={formData.description}
-                onChange={handleChange}
-                rows="2"
-                placeholder="Motif du retrait..."
-              />
+              {/* Description */}
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text font-medium">Description</span>
+                </label>
+                <input
+                  type="text"
+                  name="description"
+                  className="input input-bordered w-full"
+                  value={formData.description}
+                  onChange={handleChange}
+                  placeholder="Motif du retrait..."
+                />
+              </div>
             </div>
 
             <div className="divider text-base-content/40">BÉNÉFICIAIRE DU RETRAIT</div>
@@ -254,89 +251,82 @@ const RetraitAvecBeneficiaire = () => {
             </div>
 
             {formData.use_existing_recipient ? (
-              // Sélection d'un bénéficiaire existant avec recherche et select limité
-              <div className="form-control mb-4">
-                <label className="label">
-                  <span className="label-text font-medium flex items-center gap-2">
-                    <Users className="w-4 h-4 text-primary" />
-                    Sélectionner un bénéficiaire
-                  </span>
-                </label>
-                <div className="relative">
-                  <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40" />
+              // Sélection d'un bénéficiaire existant
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text font-medium flex items-center gap-2">
+                      <Search className="w-4 h-4 text-primary" />
+                      Rechercher
+                    </span>
+                  </label>
                   <input
                     type="text"
-                    placeholder="Rechercher par nom, téléphone ou pièce d'identité..."
-                    className="input input-bordered w-full pl-10"
+                    placeholder="Nom, téléphone ou pièce..."
+                    className="input input-bordered w-full"
                     value={searchRecipient}
                     onChange={(e) => setSearchRecipient(e.target.value)}
                   />
                 </div>
-                {loadingRecipients ? (
-                  <div className="flex items-center justify-center py-4">
-                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                    <span className="ml-2 text-sm text-base-content/60">Chargement...</span>
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text font-medium flex items-center gap-2">
+                      <Users className="w-4 h-4 text-primary" />
+                      Sélectionner un bénéficiaire
+                    </span>
+                  </label>
+                  {loadingRecipients ? (
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                      <span className="text-sm text-base-content/60">Chargement...</span>
+                    </div>
+                  ) : (
+                    <>
+                      <select
+                        name="recipient_id"
+                        className="select select-bordered w-full"
+                        value={formData.recipient_id}
+                        onChange={handleChange}
+                      >
+                        <option value="">Choisir un bénéficiaire...</option>
+                        {displayedRecipients.map((recipient) => (
+                          <option key={recipient.id} value={recipient.id}>
+                            {recipient.full_name} - {recipient.phone} ({recipient.document_number})
+                          </option>
+                        ))}
+                      </select>
+                      {hasMore && (
+                        <p className="text-xs text-base-content/40 mt-1">
+                          {filteredRecipients.length} bénéficiaires trouvés, affichage des {MAX_DISPLAY} premiers.
+                        </p>
+                      )}
+                      {filteredRecipients.length === 0 && searchRecipient && (
+                        <div className="text-center py-2 text-base-content/60">
+                          <p>Aucun bénéficiaire trouvé.</p>
+                          <button
+                            type="button"
+                            className="btn btn-ghost btn-sm mt-2 gap-2"
+                            onClick={() => setFormData(prev => ({ ...prev, use_existing_recipient: false }))}
+                          >
+                            <UserPlus className="w-4 h-4" />
+                            Créer un nouveau
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+                {/* Affichage du bénéficiaire sélectionné s'il n'est pas dans la liste */}
+                {formData.recipient_id && selectedRecipient && !displayedRecipients.some(r => r.id === parseInt(formData.recipient_id)) && (
+                  <div className="lg:col-span-2 mt-2 p-3 bg-primary/10 rounded-lg border border-primary/30">
+                    <p className="text-sm font-medium">Bénéficiaire sélectionné :</p>
+                    <p className="text-sm">{selectedRecipient.full_name} - {selectedRecipient.phone}</p>
                   </div>
-                ) : (
-                  <>
-                    <select
-                      name="recipient_id"
-                      className="select select-bordered w-full mt-2"
-                      value={formData.recipient_id}
-                      onChange={handleChange}
-                    >
-                      <option value="">Choisir un bénéficiaire...</option>
-                      {displayedRecipients.map((recipient) => (
-                        <option key={recipient.id} value={recipient.id}>
-                          {recipient.full_name} - {recipient.phone} ({recipient.document_number})
-                        </option>
-                      ))}
-                    </select>
-                    {hasMore && (
-                      <p className="text-xs text-base-content/40 mt-1">
-                        {filteredRecipients.length} bénéficiaires trouvés, affichage des {MAX_DISPLAY} premiers. 
-                        Affinez votre recherche.
-                      </p>
-                    )}
-                    {filteredRecipients.length === 0 && searchRecipient && (
-                      <div className="text-center py-2 text-base-content/60">
-                        <p>Aucun bénéficiaire ne correspond à votre recherche.</p>
-                        <button
-                          type="button"
-                          className="btn btn-ghost btn-sm mt-2 gap-2"
-                          onClick={() => setFormData(prev => ({ ...prev, use_existing_recipient: false }))}
-                        >
-                          <UserPlus className="w-4 h-4" />
-                          Créer un nouveau bénéficiaire
-                        </button>
-                      </div>
-                    )}
-                    {filteredRecipients.length === 0 && !searchRecipient && recipients.length === 0 && (
-                      <div className="text-center py-2 text-base-content/60">
-                        <p>Aucun bénéficiaire enregistré.</p>
-                        <button
-                          type="button"
-                          className="btn btn-ghost btn-sm mt-2 gap-2"
-                          onClick={() => setFormData(prev => ({ ...prev, use_existing_recipient: false }))}
-                        >
-                          <UserPlus className="w-4 h-4" />
-                          Créer le premier bénéficiaire
-                        </button>
-                      </div>
-                    )}
-                    {/* Afficher le bénéficiaire sélectionné s'il n'est pas dans la liste affichée */}
-                    {formData.recipient_id && selectedRecipient && !displayedRecipients.some(r => r.id === parseInt(formData.recipient_id)) && (
-                      <div className="mt-2 p-2 bg-primary/10 rounded-lg border border-primary/30">
-                        <p className="text-sm font-medium">Bénéficiaire sélectionné :</p>
-                        <p className="text-sm">{selectedRecipient.full_name} - {selectedRecipient.phone}</p>
-                      </div>
-                    )}
-                  </>
                 )}
               </div>
             ) : (
-              // Création d'un nouveau bénéficiaire (inchangé)
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              // Création d'un nouveau bénéficiaire (grille plus large)
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div className="form-control">
                   <label className="label">
                     <span className="label-text font-medium flex items-center gap-2">
@@ -347,7 +337,7 @@ const RetraitAvecBeneficiaire = () => {
                   <input
                     type="text"
                     name="recipient_first_name"
-                    className="input input-bordered"
+                    className="input input-bordered w-full"
                     value={formData.recipient_first_name}
                     onChange={handleChange}
                     required={!formData.use_existing_recipient}
@@ -364,7 +354,7 @@ const RetraitAvecBeneficiaire = () => {
                   <input
                     type="text"
                     name="recipient_last_name"
-                    className="input input-bordered"
+                    className="input input-bordered w-full"
                     value={formData.recipient_last_name}
                     onChange={handleChange}
                     required={!formData.use_existing_recipient}
@@ -381,7 +371,7 @@ const RetraitAvecBeneficiaire = () => {
                   <input
                     type="tel"
                     name="recipient_phone"
-                    className="input input-bordered"
+                    className="input input-bordered w-full"
                     value={formData.recipient_phone}
                     onChange={handleChange}
                     required={!formData.use_existing_recipient}
@@ -399,7 +389,7 @@ const RetraitAvecBeneficiaire = () => {
                   <input
                     type="email"
                     name="recipient_email"
-                    className="input input-bordered"
+                    className="input input-bordered w-full"
                     value={formData.recipient_email}
                     onChange={handleChange}
                     placeholder="email@exemple.com"
@@ -415,7 +405,7 @@ const RetraitAvecBeneficiaire = () => {
                   </label>
                   <select
                     name="recipient_document_type"
-                    className="select select-bordered"
+                    className="select select-bordered w-full"
                     value={formData.recipient_document_type}
                     onChange={handleChange}
                   >
@@ -437,15 +427,15 @@ const RetraitAvecBeneficiaire = () => {
                   <input
                     type="text"
                     name="recipient_document_number"
-                    className="input input-bordered"
+                    className="input input-bordered w-full"
                     value={formData.recipient_document_number}
                     onChange={handleChange}
                     required={!formData.use_existing_recipient}
-                    placeholder="Numéro de la pièce d'identité"
+                    placeholder="Numéro de la pièce"
                   />
                 </div>
 
-                <div className="form-control md:col-span-2">
+                <div className="form-control lg:col-span-2">
                   <label className="label">
                     <span className="label-text font-medium flex items-center gap-2">
                       <MapPin className="w-4 h-4 text-primary" />
@@ -454,7 +444,7 @@ const RetraitAvecBeneficiaire = () => {
                   </label>
                   <textarea
                     name="recipient_address"
-                    className="textarea textarea-bordered"
+                    className="textarea textarea-bordered w-full"
                     value={formData.recipient_address}
                     onChange={handleChange}
                     rows="2"
@@ -467,7 +457,7 @@ const RetraitAvecBeneficiaire = () => {
             {/* Résumé */}
             <div className="bg-base-200 p-4 rounded-lg mt-4">
               <p className="font-semibold mb-2">Résumé du retrait</p>
-              <div className="space-y-1 text-sm">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-base-content/60">Partenaire</span>
                   <span className="font-medium">{selectedPartner?.name || 'Non sélectionné'}</span>

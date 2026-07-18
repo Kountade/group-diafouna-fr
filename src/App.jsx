@@ -33,6 +33,10 @@ import RetraitAvecBeneficiaire from './components/finance/RetraitAvecBeneficiair
 import Beneficiaires from './components/finance/Beneficiaires';
 import BeneficiaireForm from './components/finance/BeneficiaireForm';
 import BeneficiaireDetail from './components/finance/BeneficiaireDetail';
+
+import Dashboard from './components/services/Dashboard';
+import Analyses from './components/finance/Analyses';
+import DashboardPro from './components/services/DashboardPro';
 // Modules Logistique/Catégories
 
 
@@ -74,8 +78,12 @@ function App() {
             <Routes>
               {/* Route protégée */}
               <Route element={<ProtectedRoute />}>
-                <Route path="/home" element={<Home />} />
-                <Route path="/dashboard" element={<Home />} />
+               
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/statistiques" element={<DashboardPro />} />
+                
+
+<Route path="/analyses" element={<Analyses />} />
 
                 {/* ==================== Partenaire ==================== */}
               <Route path="/partenaires" element={<Partenaires />} />

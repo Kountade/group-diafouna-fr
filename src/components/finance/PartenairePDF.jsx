@@ -14,10 +14,6 @@ const styles = StyleSheet.create({
     borderBottom: '1px solid #cccccc',
     paddingBottom: 10,
   },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
   companyName: {
     fontSize: 16,
     fontWeight: 'bold',
@@ -160,7 +156,9 @@ const PartenairePDF = ({ partner, account, deposits, withdrawals, dateFrom, date
 
   const formatDate = (dateStr) => {
     return new Date(dateStr).toLocaleDateString('fr-FR', {
-      day: 'numeric', month: 'long', year: 'numeric'
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
     });
   };
 
@@ -168,10 +166,22 @@ const PartenairePDF = ({ partner, account, deposits, withdrawals, dateFrom, date
   const totalWithdrawals = withdrawals.reduce((sum, tx) => sum + parseFloat(tx.amount), 0);
   const balance = parseFloat(account?.balance || 0);
 
+  // ✅ Fonction pour récupérer le nom de la personne qui a créé la transaction
+  const getCreatorName = (tx) => {
+    if (tx.created_by_full_name && tx.created_by_full_name !== '') {
+      return tx.created_by_full_name;
+    }
+    if (tx.created_by_email) {
+      return tx.created_by_email;
+    }
+    return '—';
+  };
+
   return (
     <Document>
-      <Page size="A4" style={styles.page}>
-        {/* En-tête */}
+      {/* Mode paysage pour plus de largeur */}
+      <Page size="A4" orientation="landscape" style={styles.page}>
+        {/* ========== EN-TÊTE ========== */}
         <View style={styles.header}>
           <View>
             <Text style={styles.companyName}>{defaultCompany.name}</Text>
@@ -185,13 +195,13 @@ const PartenairePDF = ({ partner, account, deposits, withdrawals, dateFrom, date
           </View>
         </View>
 
-        {/* Titre */}
+        {/* ========== TITRE ========== */}
         <Text style={styles.title}>RAPPORT D'ACTIVITÉ DU PARTENAIRE</Text>
         <Text style={styles.subtitle}>
-          Période du {dateFrom ? formatDate(dateFrom) : 'Début'} au {dateTo ? formatDate(dateTo) : 'Aujourd\'hui'}
+          Période du {dateFrom ? formatDate(dateFrom) : 'Début'} au {dateTo ? formatDate(dateTo) : "Aujourd'hui"}
         </Text>
 
-        {/* Informations du partenaire */}
+        {/* ========== INFORMATIONS PARTENAIRE ========== */}
         <View style={styles.infoBlock}>
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Partenaire</Text>
@@ -217,7 +227,7 @@ const PartenairePDF = ({ partner, account, deposits, withdrawals, dateFrom, date
           </View>
         </View>
 
-        {/* Tableau des dépôts (inchangé) */}
+        {/* ========== TABLEAU DES DÉPÔTS ========== */}
         {deposits.length > 0 && (
           <>
             <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#27ae60', marginTop: 10 }}>
@@ -225,23 +235,26 @@ const PartenairePDF = ({ partner, account, deposits, withdrawals, dateFrom, date
             </Text>
             <View style={styles.table}>
               <View style={styles.tableHeader}>
-                <Text style={styles.tableHeaderCell}>Date</Text>
-                <Text style={styles.tableHeaderCell}>Description</Text>
-                <Text style={[styles.tableHeaderCell, { textAlign: 'right' }]}>Montant</Text>
+                <Text style={[styles.tableHeaderCell, { flex: 0.9 }]}>Date</Text>
+                <Text style={[styles.tableHeaderCell, { flex: 1.0 }]}>Agent / Admin</Text>
+                <Text style={[styles.tableHeaderCell, { flex: 1.5 }]}>Description</Text>
+                <Text style={[styles.tableHeaderCell, { flex: 0.8, textAlign: 'right' }]}>Montant</Text>
               </View>
               {deposits.map((tx) => (
                 <View key={tx.id} style={styles.tableRow}>
-                  <Text style={styles.tableCell}>{formatDate(tx.created_at)}</Text>
-                  <Text style={styles.tableCell}>{tx.description || '—'}</Text>
-                  <Text style={[styles.tableCell, styles.amountPositive, { textAlign: 'right' }]}>
+                  <Text style={[styles.tableCell, { flex: 0.9 }]}>{formatDate(tx.created_at)}</Text>
+                  <Text style={[styles.tableCell, { flex: 1.0 }]}>{getCreatorName(tx)}</Text>
+                  <Text style={[styles.tableCell, { flex: 1.5 }]}>{tx.description || '—'}</Text>
+                  <Text style={[styles.tableCell, styles.amountPositive, { flex: 0.8, textAlign: 'right' }]}>
                     + {formatNumber(tx.amount)} GNF
                   </Text>
                 </View>
               ))}
               <View style={[styles.tableRow, { backgroundColor: '#f0faf0', fontWeight: 'bold' }]}>
-                <Text style={styles.tableCell}>Total</Text>
-                <Text style={styles.tableCell}></Text>
-                <Text style={[styles.tableCell, styles.amountPositive, { textAlign: 'right' }]}>
+                <Text style={[styles.tableCell, { flex: 0.9 }]}>Total</Text>
+                <Text style={[styles.tableCell, { flex: 1.0 }]}></Text>
+                <Text style={[styles.tableCell, { flex: 1.5 }]}></Text>
+                <Text style={[styles.tableCell, styles.amountPositive, { flex: 0.8, textAlign: 'right' }]}>
                   + {formatNumber(totalDeposits)} GNF
                 </Text>
               </View>
@@ -249,7 +262,7 @@ const PartenairePDF = ({ partner, account, deposits, withdrawals, dateFrom, date
           </>
         )}
 
-        {/* Tableau des retraits AVEC bénéficiaire */}
+        {/* ========== TABLEAU DES RETRAITS ========== */}
         {withdrawals.length > 0 && (
           <>
             <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#e74c3c', marginTop: 10 }}>
@@ -257,31 +270,34 @@ const PartenairePDF = ({ partner, account, deposits, withdrawals, dateFrom, date
             </Text>
             <View style={styles.table}>
               <View style={styles.tableHeader}>
-                <Text style={[styles.tableHeaderCell, { flex: 1.2 }]}>Date</Text>
-                <Text style={[styles.tableHeaderCell, { flex: 1.5 }]}>Bénéficiaire</Text>
+                <Text style={[styles.tableHeaderCell, { flex: 0.8 }]}>Date</Text>
+                <Text style={[styles.tableHeaderCell, { flex: 1.2 }]}>Bénéficiaire</Text>
+                <Text style={[styles.tableHeaderCell, { flex: 1.0 }]}>Agent / Admin</Text>
                 <Text style={[styles.tableHeaderCell, { flex: 1.5 }]}>Description</Text>
-                <Text style={[styles.tableHeaderCell, { flex: 1, textAlign: 'right' }]}>Montant</Text>
+                <Text style={[styles.tableHeaderCell, { flex: 0.8, textAlign: 'right' }]}>Montant</Text>
               </View>
               {withdrawals.map((tx) => (
                 <View key={tx.id} style={styles.tableRow}>
-                  <Text style={[styles.tableCell, { flex: 1.2 }]}>{formatDate(tx.created_at)}</Text>
-                  <View style={[styles.tableCell, { flex: 1.5 }]}>
+                  <Text style={[styles.tableCell, { flex: 0.8 }]}>{formatDate(tx.created_at)}</Text>
+                  <View style={[styles.tableCell, { flex: 1.2 }]}>
                     <Text>{tx.recipient_name || '—'}</Text>
                     {tx.recipient_phone && (
                       <Text style={{ fontSize: 6, color: '#7f8c8d' }}>{tx.recipient_phone}</Text>
                     )}
                   </View>
+                  <Text style={[styles.tableCell, { flex: 1.0 }]}>{getCreatorName(tx)}</Text>
                   <Text style={[styles.tableCell, { flex: 1.5 }]}>{tx.description || '—'}</Text>
-                  <Text style={[styles.tableCell, styles.amountNegative, { flex: 1, textAlign: 'right' }]}>
+                  <Text style={[styles.tableCell, styles.amountNegative, { flex: 0.8, textAlign: 'right' }]}>
                     - {formatNumber(tx.amount)} GNF
                   </Text>
                 </View>
               ))}
               <View style={[styles.tableRow, { backgroundColor: '#faf0f0', fontWeight: 'bold' }]}>
-                <Text style={[styles.tableCell, { flex: 1.2 }]}>Total</Text>
+                <Text style={[styles.tableCell, { flex: 0.8 }]}>Total</Text>
+                <Text style={[styles.tableCell, { flex: 1.2 }]}></Text>
+                <Text style={[styles.tableCell, { flex: 1.0 }]}></Text>
                 <Text style={[styles.tableCell, { flex: 1.5 }]}></Text>
-                <Text style={[styles.tableCell, { flex: 1.5 }]}></Text>
-                <Text style={[styles.tableCell, styles.amountNegative, { flex: 1, textAlign: 'right' }]}>
+                <Text style={[styles.tableCell, styles.amountNegative, { flex: 0.8, textAlign: 'right' }]}>
                   - {formatNumber(totalWithdrawals)} GNF
                 </Text>
               </View>
@@ -289,7 +305,7 @@ const PartenairePDF = ({ partner, account, deposits, withdrawals, dateFrom, date
           </>
         )}
 
-        {/* Résumé */}
+        {/* ========== RÉSUMÉ ========== */}
         <View style={styles.summary}>
           <View style={styles.summaryItem}>
             <Text style={styles.summaryLabel}>Total dépôts</Text>
@@ -305,7 +321,7 @@ const PartenairePDF = ({ partner, account, deposits, withdrawals, dateFrom, date
           </View>
         </View>
 
-        {/* Pied de page */}
+        {/* ========== PIED DE PAGE ========== */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>
             {defaultCompany.name} – {defaultCompany.address}

@@ -1,3 +1,4 @@
+// COMPONENTS/AxiosInstance.JSX
 import axios from 'axios'
 
 // Configuration pour Vite.js
