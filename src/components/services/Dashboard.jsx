@@ -499,7 +499,7 @@ const Dashboard = () => {
 
         {/* Contenu principal */}
         <div className="px-6 py-6">
-          {/* KPI Cards avec effets premium */}
+          {/* KPI Cards avec effets premium - MODIFIÉ ICI */}
           {data?.stats && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
               <div className="group relative overflow-hidden bg-gradient-to-br from-primary/10 via-primary/5 to-transparent rounded-2xl border border-primary/20 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
@@ -525,52 +525,53 @@ const Dashboard = () => {
                 </div>
               </div>
 
+              {/* Carte 2: SOLDE PARTENAIRES (remplace Total Dépôts) */}
               <div className="group relative overflow-hidden bg-gradient-to-br from-success/10 via-success/5 to-transparent rounded-2xl border border-success/20 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-success/5 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-500"></div>
                 <div className="relative p-5">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-success/70">Total Dépôts</p>
+                      <p className="text-sm font-medium text-success/70">Solde Partenaires</p>
                       <p className="text-2xl font-bold text-base-content mt-1">
-                        {formatCurrency(data.stats.transactions?.deposits_amount || 0)}
+                        {formatCurrency(data.stats.partners?.total_balance || 0)}
                       </p>
                       <div className="flex items-center gap-1 mt-1">
                         <span className="text-xs bg-success/20 text-success px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
-                          <ArrowUpRight className="w-3 h-3" /> +12.3%
+                          <Building2 className="w-3 h-3" /> {formatNumber(data.stats.partners?.total || 0)} partenaires
                         </span>
-                        <span className="text-xs text-base-content/40">vs mois dernier</span>
                       </div>
                     </div>
                     <div className="p-3 bg-success/10 rounded-2xl group-hover:scale-110 transition-transform">
-                      <TrendingUp className="w-6 h-6 text-success" />
+                      <Building2 className="w-6 h-6 text-success" />
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="group relative overflow-hidden bg-gradient-to-br from-error/10 via-error/5 to-transparent rounded-2xl border border-error/20 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-error/5 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-500"></div>
+              {/* Carte 3: SOLDE AGENTS (remplace Total Retraits) */}
+              <div className="group relative overflow-hidden bg-gradient-to-br from-info/10 via-info/5 to-transparent rounded-2xl border border-info/20 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-info/5 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-500"></div>
                 <div className="relative p-5">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-error/70">Total Retraits</p>
+                      <p className="text-sm font-medium text-info/70">Solde Agents</p>
                       <p className="text-2xl font-bold text-base-content mt-1">
-                        {formatCurrency(data.stats.transactions?.withdrawals_amount || 0)}
+                        {formatCurrency(data.stats.agents?.total_balance || 0)}
                       </p>
                       <div className="flex items-center gap-1 mt-1">
-                        <span className="text-xs bg-error/20 text-error px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
-                          <ArrowDownRight className="w-3 h-3" /> -3.8%
+                        <span className="text-xs bg-info/20 text-info px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
+                          <UserCheck className="w-3 h-3" /> {formatNumber(data.stats.agents?.active || 0)} agents actifs
                         </span>
-                        <span className="text-xs text-base-content/40">vs mois dernier</span>
                       </div>
                     </div>
-                    <div className="p-3 bg-error/10 rounded-2xl group-hover:scale-110 transition-transform">
-                      <TrendingDown className="w-6 h-6 text-error" />
+                    <div className="p-3 bg-info/10 rounded-2xl group-hover:scale-110 transition-transform">
+                      <UserCheck className="w-6 h-6 text-info" />
                     </div>
                   </div>
                 </div>
               </div>
 
+              {/* Carte 4: Transactions */}
               <div className="group relative overflow-hidden bg-gradient-to-br from-warning/10 via-warning/5 to-transparent rounded-2xl border border-warning/20 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-warning/5 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-500"></div>
                 <div className="relative p-5">
@@ -596,7 +597,7 @@ const Dashboard = () => {
             </div>
           )}
 
-          {/* Stats rapides avec badges */}
+          {/* Stats rapides avec badges - MODIFIÉ ICI AUSSI */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
             <div className="flex items-center gap-3 bg-base-100/80 backdrop-blur-sm rounded-xl px-4 py-3 shadow-sm border border-base-200/50 hover:border-primary/20 transition-colors">
               <div className="p-2 bg-primary/5 rounded-lg">
@@ -621,8 +622,8 @@ const Dashboard = () => {
                 <DollarSign className="w-4 h-4 text-warning" />
               </div>
               <div>
-                <p className="text-xs text-base-content/50">Dépôts</p>
-                <p className="text-sm font-bold">{formatNumber(data?.stats?.transactions?.deposits || 0)}</p>
+                <p className="text-xs text-base-content/50">Montant Dépôts</p>
+                <p className="text-sm font-bold">{formatCurrency(data?.stats?.transactions?.deposits_amount || 0)}</p>
               </div>
             </div>
             <div className="flex items-center gap-3 bg-base-100/80 backdrop-blur-sm rounded-xl px-4 py-3 shadow-sm border border-base-200/50 hover:border-error/20 transition-colors">
@@ -630,8 +631,8 @@ const Dashboard = () => {
                 <TrendingDown className="w-4 h-4 text-error" />
               </div>
               <div>
-                <p className="text-xs text-base-content/50">Retraits</p>
-                <p className="text-sm font-bold">{formatNumber(data?.stats?.transactions?.withdrawals || 0)}</p>
+                <p className="text-xs text-base-content/50">Montant Retraits</p>
+                <p className="text-sm font-bold">{formatCurrency(data?.stats?.transactions?.withdrawals_amount || 0)}</p>
               </div>
             </div>
           </div>

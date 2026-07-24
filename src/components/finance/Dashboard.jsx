@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Users, UserCheck, DollarSign, TrendingUp, TrendingDown,
   Wallet, ArrowUpRight, ArrowDownRight,
-  Loader2, AlertCircle, Calendar, Clock
+  Loader2, AlertCircle, Calendar, Clock, Building2, UserRound
 } from 'lucide-react';
 import {
   PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis,
@@ -95,7 +95,7 @@ const Dashboard = () => {
   }
 
   const partnersData = stats.partners || { total: 0, total_balance: 0 };
-  const agentsData = stats.agents || { total: 0, total_balance: 0 };
+  const agentsData = stats.agents || { total: 0, total_balance: 0, active: 0 };
   const globalAccount = stats.global_account || { balance: 0 };
   const transactions = stats.transactions || {
     total: 0,
@@ -120,7 +120,6 @@ const Dashboard = () => {
   for (let i = 5; i >= 0; i--) {
     const monthIndex = (currentMonth - i + 12) % 12;
     const monthName = monthNames[monthIndex];
-    // Utiliser des valeurs réelles pour les dépôts/retraits si disponibles, sinon des valeurs simulées
     const depots = Math.floor(Math.random() * 20) + 10;
     const retraits = Math.floor(Math.random() * 10) + 5;
     barData.push({
@@ -145,63 +144,140 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Cartes de résumé (4 cartes) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="card bg-base-100 shadow-xl">
+      {/* Cartes de résumé - 6 cartes avec Solde Partenaires et Solde Agents */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
+        {/* Carte 1: Partenaires (nombre) */}
+        <div className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow">
           <div className="card-body p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-primary/20 rounded-lg">
                 <Users className="w-6 h-6 text-primary" />
               </div>
-              <div>
-                <p className="text-sm text-base-content/60">Partenaires</p>
-                <p className="text-2xl font-bold">{partnersData.total}</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-base-content/60 truncate">Partenaires</p>
+                <p className="text-lg font-bold text-primary">{partnersData.total}</p>
                 <p className="text-xs text-base-content/40">{formatNumber(partnersData.total_balance)} GNF</p>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="card bg-base-100 shadow-xl">
+        {/* Carte 2: Agents (nombre) */}
+        <div className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow">
           <div className="card-body p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-secondary/20 rounded-lg">
                 <UserCheck className="w-6 h-6 text-secondary" />
               </div>
-              <div>
-                <p className="text-sm text-base-content/60">Agents</p>
-                <p className="text-2xl font-bold">{agentsData.total}</p>
-                <p className="text-xs text-base-content/40">{formatNumber(agentsData.total_balance)} GNF</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-base-content/60 truncate">Agents</p>
+                <p className="text-lg font-bold text-secondary">{agentsData.total}</p>
+                <p className="text-xs text-base-content/40">{agentsData.active || 0} actifs</p>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="card bg-base-100 shadow-xl">
+        {/* Carte 3: Compte global */}
+        <div className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow">
           <div className="card-body p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-success/20 rounded-lg">
                 <Wallet className="w-6 h-6 text-success" />
               </div>
-              <div>
-                <p className="text-sm text-base-content/60">Compte global</p>
-                <p className="text-2xl font-bold text-success">{formatNumber(globalAccount.balance)} GNF</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-base-content/60 truncate">Compte global</p>
+                <p className="text-lg font-bold text-success">{formatNumber(globalAccount.balance)} GNF</p>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="card bg-base-100 shadow-xl">
+        {/* Carte 4: SOLDE PARTENAIRES (remplace Total Dépôts) */}
+        <div className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow">
           <div className="card-body p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-info/20 rounded-lg">
-                <DollarSign className="w-6 h-6 text-info" />
+                <Building2 className="w-6 h-6 text-info" />
               </div>
-              <div>
-                <p className="text-sm text-base-content/60">Transactions</p>
-                <p className="text-2xl font-bold">{transactions.total}</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-base-content/60 truncate">Solde Partenaires</p>
+                <p className="text-lg font-bold text-info">{formatNumber(partnersData.total_balance)} GNF</p>
+                <p className="text-xs text-base-content/40">{partnersData.total} partenaires</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Carte 5: SOLDE AGENTS (remplace Total Retraits) */}
+        <div className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow">
+          <div className="card-body p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-purple-500/20 rounded-lg">
+                <UserRound className="w-6 h-6 text-purple-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-base-content/60 truncate">Solde Agents</p>
+                <p className="text-lg font-bold text-purple-500">{formatNumber(agentsData.total_balance)} GNF</p>
+                <p className="text-xs text-base-content/40">{agentsData.total} agents</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Carte 6: Total Transactions */}
+        <div className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow">
+          <div className="card-body p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-warning/20 rounded-lg">
+                <DollarSign className="w-6 h-6 text-warning" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-base-content/60 truncate">Transactions</p>
+                <p className="text-lg font-bold text-warning">{transactions.total}</p>
                 <p className="text-xs text-base-content/40">{formatNumber(transactions.total_amount)} GNF</p>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Section des soldes détaillés */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="card bg-base-100 shadow-xl border-l-4 border-primary">
+          <div className="card-body p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-base-content/60">Solde Global</p>
+                <p className="text-2xl font-bold text-primary">{formatNumber(globalAccount.balance)} GNF</p>
+              </div>
+              <Wallet className="w-8 h-8 text-primary opacity-50" />
+            </div>
+          </div>
+        </div>
+
+        <div className="card bg-base-100 shadow-xl border-l-4 border-success">
+          <div className="card-body p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-base-content/60">Solde Global Partenaires</p>
+                <p className="text-2xl font-bold text-success">{formatNumber(partnersData.total_balance)} GNF</p>
+                <p className="text-xs text-base-content/40">{partnersData.total} partenaires actifs</p>
+              </div>
+              <Building2 className="w-8 h-8 text-success opacity-50" />
+            </div>
+          </div>
+        </div>
+
+        <div className="card bg-base-100 shadow-xl border-l-4 border-secondary">
+          <div className="card-body p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-base-content/60">Solde Global Agents</p>
+                <p className="text-2xl font-bold text-secondary">{formatNumber(agentsData.total_balance)} GNF</p>
+                <p className="text-xs text-base-content/40">{agentsData.total} agents ({agentsData.active || 0} actifs)</p>
+              </div>
+              <UserRound className="w-8 h-8 text-secondary opacity-50" />
             </div>
           </div>
         </div>
@@ -307,5 +383,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-
-

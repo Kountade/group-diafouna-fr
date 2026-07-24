@@ -31,7 +31,7 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [openSections, setOpenSections] = useState({
     'TABLEAU DE BORD': true,
-    'PARTENAIRES & FINANCES': true,
+    'PARTENAIRES & FINANCES': false,
     'OPÉRATIONS': false,
     'AGENTS': false,
     'ADMINISTRATION': false,
@@ -178,11 +178,18 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
   const isAdmin = role === 'admin';
   const isAgent = role === 'agent';
   
-  // Permissions
+  // ============================================
+  // PERMISSIONS - L'AGENT NE VOIT PAS LES PARTENAIRES
+  // ============================================
   const canViewDashboard = () => true;
-  const canManagePartners = () => isAdmin;
-  const canViewPartners = () => isAdmin || isAgent;
-  const canRecordDeposit = () => isAdmin || isAgent;
+  
+  // ❌ L'agent ne voit PAS les partenaires
+  const canManagePartners = () => isAdmin; // Seul l'admin
+  const canViewPartners = () => isAdmin; // ❌ L'agent ne voit PAS les partenaires
+  
+  // ❌ L'agent ne voit PAS "Dépôt partenaire"
+  const canRecordDeposit = () => isAdmin; // Seul l'admin
+  
   const canTransferToAgent = () => isAdmin;
   const canTransferBetweenAgents = () => isAgent;
   const canRecordWithdrawal = () => isAgent;
@@ -205,7 +212,9 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
     navigate('/');
   };
 
-  // Menu sections - ANALYSES SUPPRIMÉ
+  // ============================================
+  // MENU SECTIONS - CONFIGURATION
+  // ============================================
   const menuSections = [
     {
       name: 'TABLEAU DE BORD',
@@ -213,13 +222,15 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
       items: [
         { id: 'dashboard', text: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', permission: canViewDashboard() },
         { id: 'statistiques', text: 'Statistiques financières', icon: TrendingUp, path: '/statistiques', permission: canViewStatistics() }
-        // ANALYSES SUPPRIMÉ ICI
       ]
     },
+    // ============================================
+    // SECTION PARTENAIRES & FINANCES - CACHÉE POUR L'AGENT
+    // ============================================
     {
       name: 'PARTENAIRES & FINANCES',
       icon: Handshake,
-      permission: true,
+      permission: isAdmin, // ❌ Cette section est complètement cachée pour l'agent
       items: [
         { id: 'partners', text: 'Partenaires', icon: Users, path: '/partenaires', permission: canViewPartners() },
         { id: 'partners-create', text: 'Nouveau partenaire', icon: UserPlus, path: '/partenaires/ajouter', permission: canManagePartners() },
@@ -227,18 +238,29 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
         { id: 'transactions', text: 'Transactions', icon: Receipt, path: '/transactions', permission: canViewTransactions() }
       ]
     },
+    // ============================================
+    // SECTION OPÉRATIONS - L'AGENT A ACCÈS À CERTAINES OPÉRATIONS
+    // ============================================
     {
       name: 'OPÉRATIONS',
       icon: CreditCard,
       permission: true,
       items: [
-        { id: 'deposit', text: 'Dépôt partenaire', icon: CreditCard, path: '/depots', permission: canRecordDeposit() },
+        // ❌ Dépôt partenaire - UNIQUEMENT ADMIN
+        { id: 'deposit', text: 'Entrée" partenaire', icon: CreditCard, path: '/depots', permission: canRecordDeposit() },
+        // ❌ Transfert Global → Agent - UNIQUEMENT ADMIN
         { id: 'transfer-to-agent', text: 'Transfert Global → Agent', icon: Send, path: '/transferts-vers-agents', permission: canTransferToAgent() },
+        // ✅ Transfert entre agents - UNIQUEMENT AGENT
         { id: 'transfer-between-agents', text: 'Transfert entre agents', icon: Repeat, path: '/transfert-entre-agents', permission: canTransferBetweenAgents() },
-        { id: 'withdrawal', text: 'Retrait partenaire', icon: ArrowLeftRight, path: '/retraits', permission: canRecordWithdrawal() },
+        // ✅ Retrait partenaire - AGENT ET ADMIN
+        { id: 'withdrawal', text: 'Sortie partenaire', icon: ArrowLeftRight, path: '/retraits', permission: canRecordWithdrawal() },
+        // ✅ Bénéficiaires - AGENT ET ADMIN
         { id: 'recipients', text: 'Bénéficiaires', icon: UserCheck, path: '/beneficiaires', permission: canViewRecipients() }
       ]
     },
+    // ============================================
+    // SECTION AGENTS
+    // ============================================
     {
       name: 'AGENTS',
       icon: Users,
