@@ -44,15 +44,15 @@ const DashboardPro = () => {
   };
 
   const formatCurrency = (amount) => {
-    if (amount === undefined || amount === null) return '0 CFA';
+    if (amount === undefined || amount === null) return '0';
     const num = typeof amount === 'string' ? parseFloat(amount) : amount;
-    if (isNaN(num)) return '0 CFA';
+    if (isNaN(num)) return '0';
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
       currency: 'XOF',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    }).format(num).replace('XOF', 'CFA');
+    }).format(num).replace('XOF', '');
   };
 
   const fetchDashboardData = useCallback(async (range = dateRange) => {

@@ -44,15 +44,15 @@ const Dashboard = () => {
   };
 
   const formatCurrency = (amount) => {
-    if (amount === undefined || amount === null) return '0 CFA';
+    if (amount === undefined || amount === null) return '0 GNF';
     const num = typeof amount === 'string' ? parseFloat(amount) : amount;
-    if (isNaN(num)) return '0 CFA';
+    if (isNaN(num)) return '0 GNF';
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
-      currency: 'XOF',
+      currency: 'GNF',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    }).format(num).replace('XOF', 'CFA');
+    }).format(num).replace('GNF', 'GNF');
   };
 
   const formatCompact = (num) => {
@@ -499,7 +499,7 @@ const Dashboard = () => {
 
         {/* Contenu principal */}
         <div className="px-6 py-6">
-          {/* KPI Cards avec effets premium - MODIFIÉ ICI */}
+          {/* KPI Cards avec effets premium */}
           {data?.stats && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
               <div className="group relative overflow-hidden bg-gradient-to-br from-primary/10 via-primary/5 to-transparent rounded-2xl border border-primary/20 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
@@ -525,7 +525,7 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              {/* Carte 2: SOLDE PARTENAIRES (remplace Total Dépôts) */}
+              {/* Carte 2: SOLDE PARTENAIRES */}
               <div className="group relative overflow-hidden bg-gradient-to-br from-success/10 via-success/5 to-transparent rounded-2xl border border-success/20 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-success/5 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-500"></div>
                 <div className="relative p-5">
@@ -548,7 +548,7 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              {/* Carte 3: SOLDE AGENTS (remplace Total Retraits) */}
+              {/* Carte 3: SOLDE AGENTS */}
               <div className="group relative overflow-hidden bg-gradient-to-br from-info/10 via-info/5 to-transparent rounded-2xl border border-info/20 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-info/5 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-500"></div>
                 <div className="relative p-5">
@@ -597,7 +597,7 @@ const Dashboard = () => {
             </div>
           )}
 
-          {/* Stats rapides avec badges - MODIFIÉ ICI AUSSI */}
+          {/* Stats rapides avec badges */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
             <div className="flex items-center gap-3 bg-base-100/80 backdrop-blur-sm rounded-xl px-4 py-3 shadow-sm border border-base-200/50 hover:border-primary/20 transition-colors">
               <div className="p-2 bg-primary/5 rounded-lg">

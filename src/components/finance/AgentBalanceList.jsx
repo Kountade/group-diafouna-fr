@@ -48,9 +48,21 @@ const AgentBalanceList = () => {
   const formatNumber = (number) => {
     if (typeof number !== 'number') number = parseFloat(number) || 0;
     return new Intl.NumberFormat('fr-FR', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(number);
+  };
+
+  const formatCurrency = (amount) => {
+    if (amount === undefined || amount === null) return '0 GNF';
+    const num = typeof amount === 'string' ? parseFloat(amount) : amount;
+    if (isNaN(num)) return '0 GNF';
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency: 'GNF',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(num).replace('GNF', 'GNF');
   };
 
   const formatDate = (dateStr) => {
@@ -158,7 +170,7 @@ const AgentBalanceList = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-base-content/60">Solde</span>
                     <span className="text-xl font-bold text-primary">
-                      {formatNumber(agent.balance)} {agent.currency || 'XOF'}
+                      {formatCurrency(agent.balance)}
                     </span>
                   </div>
 

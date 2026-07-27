@@ -59,7 +59,7 @@ const AgentTransfer = () => {
     }
 
     if (globalBalance !== null && amountValue > globalBalance) {
-      setError(`Solde global insuffisant (${globalBalance} XOF disponible)`);
+      setError(`Solde global insuffisant (${formatCurrency(globalBalance)} disponible)`);
       setLoading(false);
       return;
     }
@@ -71,7 +71,7 @@ const AgentTransfer = () => {
         description: description || 'Transfert vers agent'
       });
 
-      setMessage(`✅ Transfert de ${formatNumber(amountValue)} XOF effectué avec succès !`);
+      setMessage(`✅ Transfert de ${formatCurrency(amountValue)} effectué avec succès !`);
       setAmount('');
       setDescription('');
       setSelectedAgent('');
@@ -94,9 +94,21 @@ const AgentTransfer = () => {
   const formatNumber = (number) => {
     if (typeof number !== 'number') number = parseFloat(number) || 0;
     return new Intl.NumberFormat('fr-FR', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(number);
+  };
+
+  const formatCurrency = (amount) => {
+    if (amount === undefined || amount === null) return '0 GNF';
+    const num = typeof amount === 'string' ? parseFloat(amount) : amount;
+    if (isNaN(num)) return '0 GNF';
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency: 'GNF',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(num).replace('GNF', 'GNF');
   };
 
   const getSelectedAgentBalance = () => {
@@ -113,7 +125,7 @@ const AgentTransfer = () => {
   }
 
   return (
-    <div className="w-full max-w-3xl mx-auto">
+    <div className="w-full px-0">
       {/* En-tête */}
       <div className="flex items-center gap-4 mb-6">
         <button onClick={() => navigate('/agents')} className="btn btn-ghost btn-circle">
@@ -151,7 +163,7 @@ const AgentTransfer = () => {
                 <span className="font-medium">Solde Global disponible</span>
               </div>
               <span className="text-xl font-bold text-primary">
-                {formatNumber(globalBalance)} XOF
+                {formatCurrency(globalBalance)}
               </span>
             </div>
           </div>
@@ -179,13 +191,13 @@ const AgentTransfer = () => {
                 <option value="">Choisir un agent...</option>
                 {agents.map((agent) => (
                   <option key={agent.id} value={agent.id}>
-                    {agent.full_name || agent.email} - Solde: {formatNumber(agent.balance)} XOF
+                    {agent.full_name || agent.email} - Solde: {formatCurrency(agent.balance)}
                   </option>
                 ))}
               </select>
               {selectedAgent && (
                 <p className="text-sm text-base-content/60 mt-1">
-                  Solde actuel de l'agent: <span className="font-bold text-primary">{formatNumber(getSelectedAgentBalance())} XOF</span>
+                  Solde actuel de l'agent: <span className="font-bold text-primary">{formatCurrency(getSelectedAgentBalance())}</span>
                 </p>
               )}
             </div>
@@ -195,7 +207,7 @@ const AgentTransfer = () => {
               <label className="label">
                 <span className="label-text font-medium flex items-center gap-2">
                   <DollarSign className="w-4 h-4" />
-                  Montant à transférer (XOF)
+                  Montant à transférer (GNF)
                 </span>
               </label>
               <input
@@ -204,8 +216,8 @@ const AgentTransfer = () => {
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 min="0.01"
-                step="0.01"
-                placeholder="0.00"
+                step="1"
+                placeholder="0"
                 required
               />
               {globalBalance !== null && parseFloat(amount) > globalBalance && (
@@ -245,12 +257,12 @@ const AgentTransfer = () => {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-base-content/60">Montant</span>
-                  <span className="font-bold text-primary">{formatNumber(parseFloat(amount))} XOF</span>
+                  <span className="font-bold text-primary">{formatCurrency(parseFloat(amount))}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-base-content/60">Nouveau solde agent</span>
                   <span className="font-medium text-success">
-                    {formatNumber(getSelectedAgentBalance() + parseFloat(amount))} XOF
+                    {formatCurrency(getSelectedAgentBalance() + parseFloat(amount))}
                   </span>
                 </div>
               </div>
@@ -310,7 +322,7 @@ const AgentTransfer = () => {
                     </td>
                     <td>{agent.email}</td>
                     <td className="font-bold text-primary">
-                      {formatNumber(agent.balance)} XOF
+                      {formatCurrency(agent.balance)}
                     </td>
                     <td>
                       <span className={`badge ${agent.is_active ? 'badge-success' : 'badge-error'}`}>

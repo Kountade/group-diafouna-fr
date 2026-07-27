@@ -154,9 +154,21 @@ const Transactions = () => {
   const formatNumber = (number) => {
     if (typeof number !== 'number') number = parseFloat(number) || 0;
     return new Intl.NumberFormat('fr-FR', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(number);
+  };
+
+  const formatCurrency = (amount) => {
+    if (amount === undefined || amount === null) return '0 GNF';
+    const num = typeof amount === 'string' ? parseFloat(amount) : amount;
+    if (isNaN(num)) return '0 GNF';
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency: 'GNF',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(num).replace('GNF', 'GNF');
   };
 
   const formatDate = (dateStr) => {
@@ -419,7 +431,7 @@ const Transactions = () => {
                         </div>
                       </td>
                       <td className={`font-bold ${isCredit ? 'text-success' : 'text-error'}`}>
-                        {isCredit ? '+' : '-'} {formatNumber(transaction.amount)} XOF
+                        {isCredit ? '+' : '-'} {formatCurrency(transaction.amount)}
                       </td>
                       <td className="text-sm max-w-[150px] truncate">
                         {transaction.description || '—'}

@@ -21,7 +21,19 @@ const Comptes = () => {
 
   const formatNumber = (number) => {
     if (typeof number !== 'number') number = parseFloat(number) || 0;
-    return new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(number);
+    return new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(number);
+  };
+
+  const formatCurrency = (amount) => {
+    if (amount === undefined || amount === null) return '0 GNF';
+    const num = typeof amount === 'string' ? parseFloat(amount) : amount;
+    if (isNaN(num)) return '0 GNF';
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency: 'GNF',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(num).replace('GNF', 'GNF');
   };
 
   const fetchAccounts = async () => {
@@ -88,7 +100,7 @@ const Comptes = () => {
         <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
           <div>
             <h1 className="text-3xl font-bold text-base-content">Comptes</h1>
-            <p className="text-base-content/60 mt-1">Soldes des comptes global, partenaires et agents</p>
+            <p className="text-base-content/60 mt-1">Soldes des comptes global, partenaires et agents en Franc Guinéen (GNF)</p>
           </div>
           <button onClick={fetchAccounts} className="btn btn-outline gap-2">
             <RefreshCw className="w-5 h-5" /> Actualiser
@@ -158,7 +170,7 @@ const Comptes = () => {
                     <div className="mt-4 pt-3 border-t border-base-200">
                       <p className="text-sm text-base-content/60">Solde actuel</p>
                       <p className="text-2xl font-bold text-primary">
-                        {formatNumber(account.balance)} {account.currency || '€'}
+                        {formatCurrency(account.balance)}
                       </p>
                     </div>
                     {account.account_type === 'partner' && (
