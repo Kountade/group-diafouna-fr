@@ -31,8 +31,20 @@ const CompteDetail = () => {
     fetchData();
   }, [id]);
 
+  // ✅ Formatage avec GNF
   const formatNumber = (num) => {
-    return new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(num);
+    return new Intl.NumberFormat('fr-FR', { 
+      minimumFractionDigits: 2, 
+      maximumFractionDigits: 2 
+    }).format(num);
+  };
+
+  // ✅ Formatage du montant avec GNF
+  const formatCurrency = (num) => {
+    return new Intl.NumberFormat('fr-FR', { 
+      minimumFractionDigits: 2, 
+      maximumFractionDigits: 2 
+    }).format(num) + ' GNF';
   };
 
   const formatDate = (dateStr) => {
@@ -73,6 +85,34 @@ const CompteDetail = () => {
       color: 'text-base-content', 
       bg: 'bg-base-200' 
     };
+  };
+
+  // ✅ Fonction pour obtenir la contrepartie avec priorité au bénéficiaire
+  const getCounterparty = (transaction, accountId) => {
+    // 1️⃣ PRIORITÉ AU BÉNÉFICIAIRE pour les retraits (withdrawal)
+    if (transaction.transaction_type === 'withdrawal' && transaction.recipient) {
+      return transaction.recipient_name || 
+             transaction.recipient?.full_name || 
+             `${transaction.recipient?.first_name || ''} ${transaction.recipient?.last_name || ''}`.trim() ||
+             'Bénéficiaire';
+    }
+
+    // 2️⃣ Pour les autres transactions, utiliser les comptes
+    if (transaction.from_account?.id === accountId) {
+      // Si le compte est l'expéditeur, la contrepartie est le destinataire
+      return transaction.to_account?.owner_name || 
+             transaction.to_account?.user?.email || 
+             transaction.to_account?.partner?.name ||
+             '—';
+    } else if (transaction.to_account?.id === accountId) {
+      // Si le compte est le destinataire, la contrepartie est l'expéditeur
+      return transaction.from_account?.owner_name || 
+             transaction.from_account?.user?.email || 
+             transaction.from_account?.partner?.name ||
+             '—';
+    }
+
+    return '—';
   };
 
   if (loading) {
@@ -119,7 +159,7 @@ const CompteDetail = () => {
                 </div>
                 <div className="text-right">
                   <p className="text-sm text-base-content/60">Solde actuel</p>
-                  <p className="text-3xl font-bold text-primary">{formatNumber(account.balance)} {account.currency || '€'}</p>
+                  <p className="text-3xl font-bold text-primary">{formatCurrency(account.balance)}</p>
                 </div>
               </div>
               <div className="divider"></div>
@@ -135,7 +175,7 @@ const CompteDetail = () => {
                   <Building2 className="w-5 h-5 text-base-content/40" />
                   <div>
                     <p className="text-sm text-base-content/60">Devise</p>
-                    <p>{account.currency || 'Euro (€)'}</p>
+                    <p>GNF (Franc Guinéen)</p>
                   </div>
                 </div>
               </div>
@@ -214,13 +254,8 @@ const CompteDetail = () => {
                           sign = '-'; 
                         }
                         
-                        // ✅ Déterminer la contrepartie
-                        let counterparty = '—';
-                        if (tx.from_account?.id === account.id) {
-                          counterparty = tx.to_account?.owner_name || tx.to_account?.user?.email || '—';
-                        } else if (tx.to_account?.id === account.id) {
-                          counterparty = tx.from_account?.owner_name || tx.from_account?.user?.email || '—';
-                        }
+                        // ✅ Contrepartie avec priorité au bénéficiaire
+                        const counterparty = getCounterparty(tx, account.id);
                         
                         return (
                           <tr key={tx.id}>
@@ -232,9 +267,16 @@ const CompteDetail = () => {
                               </div>
                             </td>
                             <td className={`font-bold ${amountColor}`}>
-                              {sign} {formatNumber(tx.amount)} €
+                              {sign} {formatNumber(tx.amount)} GNF
                             </td>
-                            <td>{counterparty}</td>
+                            <td>
+                              <div className="flex items-center gap-1">
+                                {tx.transaction_type === 'withdrawal' && tx.recipient && (
+                                  <Users className="w-3 h-3 text-base-content/40" />
+                                )}
+                                <span>{counterparty}</span>
+                              </div>
+                            </td>
                             <td className="max-w-xs truncate">{tx.description || '—'}</td>
                           </tr>
                         );
