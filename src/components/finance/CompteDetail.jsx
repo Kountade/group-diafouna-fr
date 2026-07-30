@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   ArrowLeft, DollarSign, Users, Building2, Calendar, History,
-  Loader2, AlertCircle, CreditCard, ArrowUpRight, ArrowDownLeft
+  Loader2, AlertCircle, CreditCard, ArrowUpRight, ArrowDownLeft,
+  ArrowDown, ArrowUp
 } from 'lucide-react';
 import AxiosInstance from '../AxiosInstance';
 
@@ -19,7 +20,6 @@ const CompteDetail = () => {
       try {
         const accountRes = await AxiosInstance.get(`/accounts/${id}/`);
         setAccount(accountRes.data);
-        // Récupérer les transactions liées à ce compte (en entrée ou sortie)
         const transRes = await AxiosInstance.get(`/transactions/?account=${id}`);
         setTransactions(transRes.data || []);
       } catch (err) {
@@ -39,13 +39,40 @@ const CompteDetail = () => {
     return new Date(dateStr).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   };
 
-  const getTypeInfo = (type) => {
-    switch (type) {
-      case 'deposit': return { label: 'Dépôt', icon: ArrowDownLeft, color: 'success' };
-      case 'transfer_to_agent': return { label: 'Transfert → Agent', icon: ArrowUpRight, color: 'warning' };
-      case 'withdrawal': return { label: 'Retrait', icon: ArrowUpRight, color: 'error' };
-      default: return { label: type, icon: History, color: 'default' };
+  // ✅ Fonction qui utilise directement les données de l'API
+  const getMovementInfo = (transaction, accountId) => {
+    const isCredit = transaction.transaction_type === 'deposit' && transaction.to_account?.id === accountId;
+    const isDebit = transaction.transaction_type === 'withdrawal' && transaction.from_account?.id === accountId;
+    const isTransferOut = transaction.transaction_type === 'transfer_to_agent' && transaction.from_account?.id === accountId;
+    const isTransferIn = transaction.transaction_type === 'transfer_to_agent' && transaction.to_account?.id === accountId;
+
+    // Pour les dépôts et transferts entrants → ENTRÉE
+    if (isCredit || isTransferIn) {
+      return { 
+        label: 'ENTRÉE', 
+        icon: ArrowDown, 
+        color: 'text-success', 
+        bg: 'bg-success/10' 
+      };
     }
+    
+    // Pour les retraits et transferts sortants → SORTIE
+    if (isDebit || isTransferOut) {
+      return { 
+        label: 'SORTIE', 
+        icon: ArrowUp, 
+        color: 'text-error', 
+        bg: 'bg-error/10' 
+      };
+    }
+
+    // Fallback
+    return { 
+      label: transaction.movement_label || transaction.get_transaction_type_display || '—', 
+      icon: null, 
+      color: 'text-base-content', 
+      bg: 'bg-base-200' 
+    };
   };
 
   if (loading) {
@@ -166,30 +193,48 @@ const CompteDetail = () => {
                     </thead>
                     <tbody>
                       {transactions.map(tx => {
-                        const typeInfo = getTypeInfo(tx.transaction_type);
-                        const Icon = typeInfo.icon;
+                        // ✅ Déterminer le type de mouvement
+                        const movement = getMovementInfo(tx, account.id);
+                        const MovementIcon = movement.icon;
+                        
+                        // ✅ Déterminer le signe et la couleur du montant
                         const isCredit = tx.transaction_type === 'deposit' && tx.to_account?.id === account.id;
                         const isDebit = tx.transaction_type === 'withdrawal' && tx.from_account?.id === account.id;
                         const isTransferOut = tx.transaction_type === 'transfer_to_agent' && tx.from_account?.id === account.id;
                         const isTransferIn = tx.transaction_type === 'transfer_to_agent' && tx.to_account?.id === account.id;
+                        
                         let amountColor = 'text-base-content';
                         let sign = '';
-                        if (isCredit || isTransferIn) { amountColor = 'text-success'; sign = '+'; }
-                        if (isDebit || isTransferOut) { amountColor = 'text-error'; sign = '-'; }
-                        const counterparty = tx.from_account?.id === account.id ? tx.to_account?.owner_name : tx.from_account?.owner_name;
+                        if (isCredit || isTransferIn) { 
+                          amountColor = 'text-success'; 
+                          sign = '+'; 
+                        }
+                        if (isDebit || isTransferOut) { 
+                          amountColor = 'text-error'; 
+                          sign = '-'; 
+                        }
+                        
+                        // ✅ Déterminer la contrepartie
+                        let counterparty = '—';
+                        if (tx.from_account?.id === account.id) {
+                          counterparty = tx.to_account?.owner_name || tx.to_account?.user?.email || '—';
+                        } else if (tx.to_account?.id === account.id) {
+                          counterparty = tx.from_account?.owner_name || tx.from_account?.user?.email || '—';
+                        }
+                        
                         return (
                           <tr key={tx.id}>
                             <td>{formatDate(tx.created_at)}</td>
                             <td>
-                              <div className="flex items-center gap-1">
-                                <Icon className="w-4 h-4" />
-                                <span>{typeInfo.label}</span>
+                              <div className={`badge ${movement.bg} ${movement.color} border-0 gap-1 p-3 font-bold`}>
+                                {MovementIcon && <MovementIcon className="w-4 h-4" />}
+                                {movement.label}
                               </div>
                             </td>
                             <td className={`font-bold ${amountColor}`}>
                               {sign} {formatNumber(tx.amount)} €
                             </td>
-                            <td>{counterparty || '—'}</td>
+                            <td>{counterparty}</td>
                             <td className="max-w-xs truncate">{tx.description || '—'}</td>
                           </tr>
                         );

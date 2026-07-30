@@ -249,7 +249,6 @@ const Navbar = ({ content, mode, toggleColorMode }) => {
         // ❌ Dépôt partenaire - UNIQUEMENT ADMIN
         { id: 'deposit', text: 'Entrée" partenaire', icon: CreditCard, path: '/depots', permission: canRecordDeposit() },
         // ❌ Transfert Global → Agent - UNIQUEMENT ADMIN
-        { id: 'transfer-to-agent', text: 'Transfert Global → Agent', icon: Send, path: '/transferts-vers-agents', permission: canTransferToAgent() },
         // ✅ Transfert entre agents - UNIQUEMENT AGENT
         { id: 'transfer-between-agents', text: 'Transfert entre agents', icon: Repeat, path: '/transfert-entre-agents', permission: canTransferBetweenAgents() },
         // ✅ Retrait partenaire - AGENT ET ADMIN
