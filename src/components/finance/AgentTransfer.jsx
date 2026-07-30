@@ -91,23 +91,38 @@ const AgentTransfer = () => {
     }
   };
 
+  // 📌 FORMATAGE AVEC TOUJOURS 2 CHIFFRES APRÈS LA VIRGULE (pour les montants principaux)
   const formatNumber = (number) => {
     if (typeof number !== 'number') number = parseFloat(number) || 0;
     return new Intl.NumberFormat('fr-FR', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
     }).format(number);
   };
 
+  // 📌 FORMATAGE MONNAIE AVEC TOUJOURS 2 CHIFFRES APRÈS LA VIRGULE
   const formatCurrency = (amount) => {
+    if (amount === undefined || amount === null) return '0,00 GNF';
+    const num = typeof amount === 'string' ? parseFloat(amount) : amount;
+    if (isNaN(num)) return '0,00 GNF';
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency: 'GNF',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(num).replace('GNF', 'GNF');
+  };
+
+  // 📌 FORMATAGE SANS DÉCIMALES (pour la colonne Solde dans la liste des agents)
+  const formatCurrencyWithoutDecimals = (amount) => {
     if (amount === undefined || amount === null) return '0 GNF';
     const num = typeof amount === 'string' ? parseFloat(amount) : amount;
     if (isNaN(num)) return '0 GNF';
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
       currency: 'GNF',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
+      minimumFractionDigits: 0,  // ← Pas de décimales
+      maximumFractionDigits: 0   // ← Pas de décimales
     }).format(num).replace('GNF', 'GNF');
   };
 
@@ -216,8 +231,8 @@ const AgentTransfer = () => {
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 min="0.01"
-                step="1"
-                placeholder="0"
+                step="0.01"
+                placeholder="0,00"
                 required
               />
               {globalBalance !== null && parseFloat(amount) > globalBalance && (
@@ -322,7 +337,7 @@ const AgentTransfer = () => {
                     </td>
                     <td>{agent.email}</td>
                     <td className="font-bold text-primary">
-                      {formatCurrency(agent.balance)}
+                      {formatCurrencyWithoutDecimals(agent.balance)} {/* ← ICI : Sans décimales */}
                     </td>
                     <td>
                       <span className={`badge ${agent.is_active ? 'badge-success' : 'badge-error'}`}>
