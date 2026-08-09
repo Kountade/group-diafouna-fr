@@ -11,12 +11,15 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'robots.txt'],
       manifest: {
-        name: 'Seydi Group App',
-        short_name: 'SeydiApp',
-        description: 'Application Seydi Group',
+        name: 'Group Diafouna',                    // ← Changé
+        short_name: 'Diafouna',                    // ← Changé
+        description: 'Application Group Diafouna', // ← Changé
         theme_color: '#10b981',
         background_color: '#ffffff',
         display: 'standalone',
+        orientation: 'portrait',
+        scope: '/',
+        start_url: '/',
         icons: [
           {
             src: '/icons/icon-192x192.png',
@@ -78,7 +81,6 @@ export default defineConfig({
     outDir: 'dist',
     assetsDir: 'assets',
     sourcemap: false
-    // ✅ PAS DE rollupOptions pour éviter les erreurs
   },
   
   server: {
