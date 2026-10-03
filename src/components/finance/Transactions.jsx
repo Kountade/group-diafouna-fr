@@ -40,8 +40,12 @@ const Transactions = () => {
     transfer_to_agent: { label: 'Transfert', color: 'info', icon: Send },
     withdrawal: { label: 'SORTIE', color: 'warning', icon: ArrowLeftRight },
     transfer_between_agents: { label: 'Transfert Agent', color: 'info', icon: Send },
-    partner_deletion_reversal: { label: 'ANNULATION', color: 'error', icon: RotateCcw },
+    reversal: { label: 'ANNULATION', color: 'error', icon: RotateCcw },
+    partner_deletion_reversal: { label: 'ANNUL. SUPPR.', color: 'error', icon: RotateCcw },
   };
+
+  const NON_REVERSIBLE_TYPES = ['reversal', 'partner_deletion_reversal'];
+  const REVERSAL_TYPES = ['reversal', 'partner_deletion_reversal'];
 
   const fetchTransactions = async () => {
     setLoading(true);
@@ -94,7 +98,8 @@ const Transactions = () => {
     const transfers = data.filter(t =>
       ['transfer_to_agent', 'transfer_between_agents'].includes(t.transaction_type) && !t.is_reversed);
     const withdrawals = data.filter(t => t.transaction_type === 'withdrawal' && !t.is_reversed);
-    const reversals = data.filter(t => t.transaction_type === 'partner_deletion_reversal' || t.is_reversed);
+    const reversals = data.filter(t =>
+      REVERSAL_TYPES.includes(t.transaction_type) || t.is_reversed);
 
     setStats({
       total: data.length,
@@ -178,10 +183,25 @@ const Transactions = () => {
     }
   };
 
+  // ✅ Utilise le champ calculé côté backend
   const canBeReversed = (t) => {
+    if (typeof t.is_reversible === 'boolean') {
+      return t.is_reversible;
+    }
+    // Fallback si le backend n'a pas encore été mis à jour
     if (t.is_reversed) return false;
-    if (t.transaction_type === 'partner_deletion_reversal') return false;
-    return ['deposit', 'withdrawal'].includes(t.transaction_type);
+    if (NON_REVERSIBLE_TYPES.includes(t.transaction_type)) return false;
+    if (!t.from_account && !t.to_account) return false;
+    return true;
+  };
+
+  const getReverseBlockReason = (t) => {
+    if (t.reverse_block_reason) return t.reverse_block_reason;
+    if (t.is_reversed) return 'Transaction déjà annulée';
+    if (NON_REVERSIBLE_TYPES.includes(t.transaction_type))
+      return 'Une annulation ne peut pas être annulée';
+    if (!t.from_account && !t.to_account) return 'Comptes liés supprimés';
+    return null;
   };
 
   if (loading && transactions.length === 0) {
@@ -279,7 +299,8 @@ const Transactions = () => {
               <option value="transfer_to_agent">Transferts vers agent</option>
               <option value="transfer_between_agents">Transferts entre agents</option>
               <option value="withdrawal">Sorties</option>
-              <option value="partner_deletion_reversal">Annulations</option>
+              <option value="reversal">Annulations</option>
+              <option value="partner_deletion_reversal">Annul. suppression</option>
             </select>
             <input
               type="date"
@@ -330,10 +351,12 @@ const Transactions = () => {
                   const typeInfo = getTransactionType(t.transaction_type);
                   const TypeIcon = typeInfo.icon;
                   const isCredit = t.transaction_type === 'deposit';
-                  const isReversal = t.transaction_type === 'partner_deletion_reversal';
+                  const isReversal = REVERSAL_TYPES.includes(t.transaction_type);
                   const isReversed = t.is_reversed;
                   const fromType = t.from_account_type || 'deleted';
                   const toType = t.to_account_type || 'deleted';
+                  const reversible = canBeReversed(t);
+                  const blockReason = getReverseBlockReason(t);
 
                   return (
                     <tr key={t.id} className={`hover ${isReversed || isReversal ? 'opacity-60 bg-red-50' : ''}`}>
@@ -381,14 +404,24 @@ const Transactions = () => {
                           <Link to={`/transactions/${t.id}`} className="btn btn-ghost btn-xs" title="Voir">
                             <Eye className="w-3 h-3" />
                           </Link>
-                          {canBeReversed(t) && (
+                          {reversible ? (
                             <button
                               onClick={() => openReverseModal(t)}
                               className="btn btn-ghost btn-xs text-error"
-                              title="Annuler"
+                              title="Annuler cette transaction"
                             >
                               <RotateCcw className="w-3 h-3" />
                             </button>
+                          ) : (
+                            blockReason && (
+                              <button
+                                className="btn btn-ghost btn-xs text-base-content/30 cursor-not-allowed"
+                                title={blockReason}
+                                disabled
+                              >
+                                <RotateCcw className="w-3 h-3" />
+                              </button>
+                            )
                           )}
                         </div>
                       </td>
@@ -452,6 +485,18 @@ const Transactions = () => {
               <div className="flex justify-between">
                 <span className="text-gray-600">Montant:</span>
                 <span className="font-bold text-primary">{formatCurrency(transactionToReverse.amount)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">De:</span>
+                <span className="font-medium text-right max-w-[200px] truncate">
+                  {transactionToReverse.from_account_label || transactionToReverse.from_account_type || '—'}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Vers:</span>
+                <span className="font-medium text-right max-w-[200px] truncate">
+                  {transactionToReverse.to_account_label || transactionToReverse.to_account_type || '—'}
+                </span>
               </div>
             </div>
 
