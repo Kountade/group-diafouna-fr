@@ -40,26 +40,62 @@ const DepotForm = () => {
     if (errors[e.target.name]) setErrors({ ...errors, [e.target.name]: '' });
   };
 
+  // ✅ Extrait un message lisible depuis une réponse DRF
+  const extractErrorMessage = (data, fallback = 'Erreur lors du dépôt') => {
+    if (!data) return fallback;
+    if (typeof data === 'string') return data;
+    if (data.error) return data.error;
+    if (data.detail) return data.detail;
+    if (typeof data === 'object') {
+      const firstKey = Object.keys(data)[0];
+      const val = data[firstKey];
+      if (Array.isArray(val)) return val[0];
+      if (typeof val === 'string') return val;
+      if (val && typeof val === 'object') {
+        const subKey = Object.keys(val)[0];
+        return Array.isArray(val[subKey]) ? val[subKey][0] : String(val[subKey]);
+      }
+      return String(val);
+    }
+    return fallback;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setErrors({});
+
+    // ── Validation locale AVANT l'envoi ──
+    if (!formData.partner_id) {
+      showNotification('Veuillez sélectionner un partenaire', 'error');
+      return;
+    }
+    const amountNum = Number(formData.amount);
+    if (!formData.amount || Number.isNaN(amountNum) || amountNum <= 0) {
+      showNotification('Veuillez saisir un montant valide (> 0)', 'error');
+      return;
+    }
+
+    setLoading(true);
     try {
+      // ✅ Envoyer amount en STRING (DecimalField DRF)
       await AxiosInstance.post('/transactions/deposit/', {
-        partner_id: parseInt(formData.partner_id),
-        amount: parseFloat(formData.amount),
-        description: formData.description
+        partner_id: parseInt(formData.partner_id, 10),
+        amount: String(amountNum),
+        description: formData.description || '',
       });
       showNotification('Dépôt enregistré avec succès', 'success');
       setTimeout(() => navigate('/depots'), 1500);
     } catch (error) {
-      console.error(error);
-      if (error.response?.data) {
-        setErrors(error.response.data);
-        const firstMsg = Object.values(error.response.data)[0];
-        showNotification(firstMsg?.[0] || 'Erreur lors du dépôt', 'error');
+      const status = error.response?.status;
+      const data = error.response?.data;
+
+      console.error('❌ Deposit error:', { status, data, url: error.config?.url });
+
+      if (data) {
+        setErrors(data);
+        showNotification(extractErrorMessage(data), 'error');
       } else {
-        showNotification('Erreur réseau', 'error');
+        showNotification('Erreur réseau — vérifiez votre connexion', 'error');
       }
     } finally {
       setLoading(false);
@@ -112,11 +148,15 @@ const DepotForm = () => {
                     {partners.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                   </select>
                 </div>
-                {errors.partner_id && <span className="text-error text-sm mt-1">{errors.partner_id}</span>}
+                {errors.partner_id && (
+                  <span className="text-error text-sm mt-1">
+                    {Array.isArray(errors.partner_id) ? errors.partner_id[0] : errors.partner_id}
+                  </span>
+                )}
               </div>
 
               <div className="form-control">
-                <label className="label"><span className="label-text font-medium">Montant (€) *</span></label>
+                <label className="label"><span className="label-text font-medium">Montant (XOF) *</span></label>
                 <div className="relative">
                   <Euro className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-base-content/40" />
                   <input
@@ -131,7 +171,11 @@ const DepotForm = () => {
                     required
                   />
                 </div>
-                {errors.amount && <span className="text-error text-sm mt-1">{errors.amount}</span>}
+                {errors.amount && (
+                  <span className="text-error text-sm mt-1">
+                    {Array.isArray(errors.amount) ? errors.amount[0] : errors.amount}
+                  </span>
+                )}
               </div>
 
               <div className="form-control md:col-span-2">
@@ -147,7 +191,11 @@ const DepotForm = () => {
                     placeholder="Motif du dépôt, référence..."
                   />
                 </div>
-                {errors.description && <span className="text-error text-sm mt-1">{errors.description}</span>}
+                {errors.description && (
+                  <span className="text-error text-sm mt-1">
+                    {Array.isArray(errors.description) ? errors.description[0] : errors.description}
+                  </span>
+                )}
               </div>
             </div>
 
